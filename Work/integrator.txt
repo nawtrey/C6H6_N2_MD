@@ -1,0 +1,5 @@
+Simulation number: 1
+Total Argon atoms in system: 12
+Integrator runtime: 12.372184991836548
+Average integrator runtime per atom: 1.031015415986379
+Average integrator runtime per time step: 0.001237218499183655
