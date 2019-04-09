@@ -1,3 +1,5 @@
+# Written in SI units
+
 #=======================================================
 #========== Molecular Dynamics of Benzene ==============
 #=======================================================
@@ -10,32 +12,29 @@ import positions
 # Import Packages:
 import time
 import numpy as np
+import multiprocessing as mp 
+# p = mp.Pool(processes=mp.cpu_count())	
 
 #=============================================================================================================
 #================================ Initial Conditions =========================================================
 #=============================================================================================================
 
 #=========== Constants ===================================
-mass_C 		= 1 				# (12.0107 u) Mass of Carbon in LJ units
-mass_H 		= 1 				# (1.00794 u) Mass of Hydrogen in LJ units
-rho         = 0.8141            # Mass density in LJ units
-n           = 0.8141            # Number density in LJ
-epsilon     = 1                 # Energy scale parameter in LJ
-sigma       = 1                 # Length scale parameter in LJ
-tau         = 1                 # Time scale parameter in LJ
+mass_C 		= 12.0107 			# Mass of Carbon in atomic mass units
+mass_H 		= 1.00794 			# Mass of Hydrogen in atomic mass units
 kB          = 1.3806488e-23     # Bolzmann's constant [J * K^{-1}]
 
 #=========== Integrator Parameters =======================
 
 # Simulation number
-sim_n       = 1         
+sim_n       = 2         
 
-# Initial temperature in LJ units
-temp_0 = { 1 : 0.787,
-		   2 : 0.787,
-		   3 : 0.787,
-		   4 : 0.787,
-		   5 : 0.787
+# Initial temperature in Kelvin
+temp_0 = { 1 : 94.4,
+		   2 : 94.4,
+		   3 : 94.4,
+		   4 : 94.4,
+		   5 : 94.4
 }
 
 # Time step
@@ -43,15 +42,15 @@ delta_t = { 1 : 1e-3,
             2 : 1e-4,
             3 : 1e-5,
             4 : 1e-6,
-            5 : 1e-6
+            5 : 1e-7
 }
 
 # Maximum integration time
 t_maximum  = { 1 : 10,
-               2 : 10,
-               3 : 10,
-               4 : 10,
-               5 : 50
+               2 : 2,
+               3 : 2,
+               4 : 2,
+               5 : 2
 }
 
 #=============================================================================================================
@@ -102,6 +101,40 @@ def F_LJ(r_vector):
     else:
         rhat = r_vector/r_mag                       # r_vector unit vector calculation
         return 24*(2*r_mag**-13 - r_mag**-7)*rhat
+
+# def F_Morse(r_vector, bondtype="CC"):
+# 	"""Morse force vector
+
+# 	    Parameters
+#     ----------
+#     r : array
+#         distance vector (x, y, z)
+
+#     Returns
+#     -------
+#     Force : array
+#         Returns force as (1 x 3) array --> [F_x1, F_y1, F_z1]
+# 	"""
+	
+# 	# D_CC values: 518, 480, 485, 493 in kJ/mol
+# 	# Force constant for OPLS-AA: 392459.2 kJ/mol*nm^2
+# 	R_CC = 1.39/3.4 									# Equilibrium distance for C-C bonds in benzene
+# 	D_CC = 0											
+# 	v_CC = 0
+# 	mu_CC = 1
+
+# 	# D_HC = 472.3736
+# 	R_HC = 1.09/3.4 									# Equilibrium distance for H-C bonds
+# 	D_HC = 0
+# 	v_HC = 0
+# 	mu_HC = 1
+
+# 	if bondtype == "CC":
+# 		B = np.pi*v_CC*np.sqrt(2*mu_CC/D_CC)
+# 		return 2*B*D_CC*(exp(2*B*(R_CC - r_vector)) - exp(B*(R_CC - r_vector)))
+# 	elif bondtype == "HC":
+# 		B = np.pi*v_HC*np.sqrt(2*mu_HC/D_HC)
+# 		return 2*B*D_HC*(exp(2*B*(R_HC - r_vector)) - exp(B*(R_HC - r_vector)))
 
 def dynamics(atoms, x0, v0, dt, t_max, filename="trajectory.xyz"):
     """Integrate equations of motion.
@@ -161,7 +194,7 @@ def dynamics(atoms, x0, v0, dt, t_max, filename="trajectory.xyz"):
     r_ij = np.zeros((N, N, 3))
     for i in range(0, N):
         for j in range(0, i):
-            r_ij[i, j] = r[0, i] - r[0, j]
+            r_ij[i, j] = r[0, j] - r[0, i]
             r_ij[j, i] = -r_ij[i, j]
 
     #============= Force Calculations ==============
@@ -195,7 +228,7 @@ def dynamics(atoms, x0, v0, dt, t_max, filename="trajectory.xyz"):
         r_ijdt = np.zeros((N, N, 3))
         for i in range(0, N):
             for j in range(0, i):
-                r_ijdt[i, j] = r[t+1, i] - r[t+1, j]
+                r_ijdt[i, j] = r[t+1, j] - r[t+1, i]
                 r_ijdt[j, i] = -r_ijdt[i, j]
 
         # Now that we have r_ij after time dt, we can calculate the new forces after time dt:
@@ -241,14 +274,27 @@ if __name__ == "__main__":
     #--------------------- Initialization -----------------------
     #------------------------------------------------------------
 
-	atoms, x_0 = positions.generate_molecule(6, "C", "H")
+	atoms, atomnumber, x_0 = positions.generate_benzene(np.array([0, 0, 0]))
 	N = len(atoms)
 	v_0 = initial_velocities(atoms, temp_0[sim_n])
 
     #------------------------------------------------------------
     #-------------------------- MD ------------------------------
     #------------------------------------------------------------
-	print("Generating data files for", N, "atoms in simulation number", sim_n, ".")
+	print("……..|::::::::|::: : : : : : : _„„--~~~~~~-„: : : : :|")
+	print("……..|:::::::|: :: : : : :_„„-: : : : : : : : ~--„_: |")
+	print("……….|::::::|: : : „--~~````~~````-„…_..„~````````````¯")
+	print("……….|:::::,`:_„„-|: : :_„---~:::|``¯¯````|:: ~---„_:::|")
+	print("……..,~-,_|``: : :|: :( ͡° ͜ʖ ͡°) : |: : : : |:( ͡° ͜ʖ ͡°)): |")
+	print("……../,`-,: : ::: ``-,__________,-``:::: ``-„__________|")
+	print("……..|: :|: : : : : : :: : : : :„: : : : :-,:: : ::: :|")
+	print("………`,:`: : : : : : : : : ::::,-`__: : : :_`,: : : : ;|")
+	print("……….`-,-`:: : : :______„-: : :``: : ¯``~~``: `: : ~--|`")
+	print("………….|: ,: : : : : : : : : : : : : : : : : : :: : : |")
+	print("………….`|: |: : : : : : : : -,„_„„-~~~--~~--„_: : : : |")
+	print("…………..|: |: : : : : : : : : : : :--------~: : : : : |")
+	print("You've been visited by the propane god, I tell you hwat. Don't 'alt-tab' out of here or Hank Hill will bring the pro pain.")
+	print("Generating data files for", N, "atoms in simulation number", sim_n)
 	start = time.time()                                             # Initial time stamp
 	results = dynamics(atoms, x_0, v_0, delta_t[sim_n], t_maximum[sim_n], filename="trajectory.xyz")
 	end = time.time()                                               # Final time stamp
@@ -268,3 +314,5 @@ if __name__ == "__main__":
 
 	with open('integrator.txt', 'w') as file:
 		file.write('\n'.join('{} {}'.format(i[0],i[1]) for i in tuples))    # Writes tuples to rows in file 'integrator.txt'
+
+# p.close()

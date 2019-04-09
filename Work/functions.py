@@ -8,9 +8,7 @@
 # http://asu-compmethodsphysics-phy494.github.io/ASU-PHY494/
 # Placed into the Public Domain.
 
-# use LJ reduced units everywhere
-#  m* = 1 (so v* = p*, and masses are not used explicitly anywhere)
-#  T* = kT/eps
+# Uses SI units everywhere
 
 import numpy as np
 
