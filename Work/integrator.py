@@ -1,8 +1,11 @@
-# Written in SI units
+# Integrator for molecular dynamics of benzene
+#
+# Written by Nikolaus Awtrey, Justin Gens, and Ricky for ASU PHY494
+# http://asu-compmethodsphysics-phy494.github.io/ASU-PHY494/
 
-#=======================================================
-#========== Molecular Dynamics of Benzene ==============
-#=======================================================
+#========================================================
+# Uses SI units everywhere
+#========================================================
 
 # Import Files:
 import IO
@@ -11,6 +14,7 @@ import positions
 
 # Import Packages:
 import time
+import tqdm
 import numpy as np
 import multiprocessing as mp 
 # p = mp.Pool(processes=mp.cpu_count())	
@@ -214,7 +218,7 @@ def dynamics(atoms, x0, v0, dt, t_max, filename="trajectory.xyz"):
     f_tot = f_ij.sum(axis=1)
 
     #============= Velocity Verlet ===============================================
-    for t in range(0, nsteps-1):
+    for t in tqdm.tqdm(range(0, nsteps-1)):
         vhalf = np.zeros((nsteps, 3))
         for j in range(0, N):
             vhalf[j] = v[t, j] + .5*dt*f_tot[j]
@@ -274,7 +278,7 @@ if __name__ == "__main__":
     #--------------------- Initialization -----------------------
     #------------------------------------------------------------
 
-	atoms, atomnumber, x_0 = positions.generate_benzene(np.array([0, 0, 0]))
+	atoms, x_0 = positions.generate_benzene(np.array([0, 0, 0]))
 	N = len(atoms)
 	v_0 = initial_velocities(atoms, temp_0[sim_n])
 
@@ -312,7 +316,7 @@ if __name__ == "__main__":
 
 	tuples = [j, k, l, m, n]                                                # Convert tuples to list of tuples
 
-	with open('integrator.txt', 'w') as file:
+	with open('integrator_data.txt', 'w') as file:
 		file.write('\n'.join('{} {}'.format(i[0],i[1]) for i in tuples))    # Writes tuples to rows in file 'integrator.txt'
 
 # p.close()
