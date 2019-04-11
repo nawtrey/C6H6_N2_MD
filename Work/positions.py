@@ -96,5 +96,4 @@ info = list(zip(mol_num, atomnumber, atomname, atommass, positions, connections)
 
 with open('Data.txt', 'w') as file:
 	for i in range(N):
-		file.write('\t'.join('{0} {1} {2} {3} {4} {5}'.format(info[i][0], info[i][1], info[i][2],
-																info[i][3], info[i][4], info[i][5])))
+		file.write("\t".join(list(map(str,info[i]))) + "\n")
