@@ -62,9 +62,9 @@ def kinetic_temperature(array, atomname):
     vH = np.zeros((N, 3))
     for i in range(N):
         if atomname == "C":
-            vC[i] = array[i][3]
+            vC[i] = array[i][:3]
         elif atomname == "H":
-            vH[i] = array[i][3]
+            vH[i] = array[i][:3]
     H = np.sum(vH**2)/(kB*Nf)
     C = np.sum(vC**2)/kB
     return  H + C
