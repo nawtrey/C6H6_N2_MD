@@ -25,7 +25,7 @@ def random_velocities(N):
     """Takes a number of particles to create an array of random velocities"""
     return np.random.rand(N, 3) - 0.5
 
-def instantaneous_temperature(array, atomname):
+def instantaneous_temperature(array):
     """
     Calculates the instantaneous temperature of the molecule for a single time step
 
@@ -38,13 +38,13 @@ def instantaneous_temperature(array, atomname):
         print("Instantaneous temperature calculation failed. {0} is out of range 12.".format(N))
     temp = np.zeros(N)
     for i in range(N):
-        if atomname[i] == "C":
+        if array[i,-1] == m_C:
             temp[i] = np.sum(array[i][:3]**2) * array[i,-1] / kB
-        elif atomname[i] == "H":
+        elif array[i,-1] == m_H:
             temp[i] = np.sum(array[i][:3]**2) * array[i,-1] / kB*Nf
     return temp
 
-def kinetic_temperature(array, atomname):
+def kinetic_temperature(array):
     """
     Calculates the kinetic temperature of the molecule
     ----------------------
@@ -61,19 +61,18 @@ def kinetic_temperature(array, atomname):
     vC = np.zeros((N, 3))
     vH = np.zeros((N, 3))
     for i in range(N):
-        if atomname == "C":
+        if array[i,-1] == m_C:
             vC[i] = array[i][:3]
-        elif atomname == "H":
+        elif array[i,-1] == m_H:
             vH[i] = array[i][:3]
     H = np.sum(vH**2)/(kB*Nf)
     C = np.sum(vC**2)/kB
     return  H + C
 
-
 def average_system_momentum(array):
     """Caclulates average system momentum for a single benzene molecule at a specific time step.
 
-       ??? Needs to be further generalized in order to do multi-molecule simulations. ???
+      ~~~ ??? Needs to be further generalized in order to do multi-molecule simulations. ??? ~~~
     """
     N = len(array)
     p_i = np.zeros((N, 3))
@@ -94,14 +93,14 @@ def remove_linear_momentum(array):
     return v_new
 
 
-def rescale(array, temperature, atomname):
+def rescale(array, temperature):
     """
     Rescale velocities so that they correspond to temperature T.
 
-    ~~~ NEEDS WORK ~~~
+    ~~~ NEEDS WORK (?) ~~~
 
     """
-    current_temperature = kinetic_temperature(array, atomname)
+    current_temperature = kinetic_temperature(array)
     return np.sqrt(temperature/current_temperature) * array[:,:3]
 
 def V_LJ(r_vector):
@@ -109,6 +108,8 @@ def V_LJ(r_vector):
     Calculates the potential energy of a single particle
     Note: here, r_vector is relative to the origin (0, 0, 0)
     where as r_ij are the radii of i particles to j particles.
+
+    ~~~ NEEDS WORK (?) ~~~
     """
     r_mag = np.sqrt(np.sum(r_vector*r_vector))      # Calculates the magnitude of r_vector
     if r_mag == 0.0:
@@ -126,7 +127,7 @@ def total_momentum(array):
 def KE(array):
      """Calculates the kinetic energy of a single particle
 
-     ~~~ NEEDS WORK ~~~
+     ~~~ NEEDS WORK (?) ~~~
 
      """
      velocities = array[:,:3]
