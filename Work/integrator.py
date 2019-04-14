@@ -60,6 +60,29 @@ t_maximum  = { 1 : 10,
 #=============================================================================================================
 #============================================ Integrator =====================================================
 #=============================================================================================================
+def initialize_positions():
+	with open('Data.txt' ,'r') as f:
+	    dtype = np.dtype([('molN',np.float32),('atomN',np.float32),('type',str,
+	(1)),('mass',np.float32),('positions',np.float32,(3)),('connections',np.flo
+	at32,(3))])
+	    ncols = sum(1 for _ in f)
+	    a = np.empty(ncols,dtype=dtype)
+	with open('Data.txt' ,'r') as g:
+	    i=0
+	    for line in g:
+	        b = line.split('\t')
+	        k = 0
+	        for j in list(a.dtype.fields.keys()):
+	            if (k==4) or (k==5):
+	                    a[i][j]=[float(l) for l in b[k].strip('\n').strip('[]').split(',')]
+	            elif k==2:
+	                a[i][j]=str(b[k])
+	            else:
+	                a[i][j]=b[k]
+	            k+=1
+	        i+=1
+	return a
+
 
 def initial_velocities(atoms, T0):
     """Generate initial velocities for *atoms*.
