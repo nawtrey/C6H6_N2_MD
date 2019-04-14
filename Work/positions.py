@@ -33,11 +33,25 @@ def generate_benzene(r_vector):
 #=== File Info Generation ====================================
 #=============================================================
 
-a_n = 6																			# Number of atoms of each type
+a_n = 6 																# Numberdd of atoms of each type
+basis = np.array([[1,0,0],[0,1,0],[0,0,1]])								# basis vectors for placing molecule centers
+
+if __name__ == "__main__":												# do this stuff when script is executed
+	import argparse														# commandline functionality
+	parser = argparse.ArgumentParser()
+	parser.add_argument('--Nmolecules',help='number of benzene to generate')
+	args = parser.parse_args()
+
+	Nbenz = int(args.Nmolecules)
+	centers = np.array([[0,0,0]])
+	for i in range(Nbenz//3+Nbenz%3):
+		for j in range(Nbenz//3);
+			for k in range(Nbenz//3):
+				centers = 
 center_of_molecules = np.array([[0, 0, 0], [0, 0, 1], [0, 0, 2], [0, 0, 3]])	# List of initial centers of the molecules to be simulated
 initial_positions = list(map(generate_benzene, center_of_molecules))			# Generates the initial positions of all atoms in each molecule
 positions = [] 																	# Empty list to fix 'initial_positions' array
-for i in range(int(len(initial_positions))):														# Generates an Nx3 list of all atom positions
+for i in range(int(len(initial_positions))):									# Generates an Nx3 list of all atom positions
     for j in range(12):
         positions.append(list(initial_positions[i][j]))
 N = len(positions)																# Number of atoms
