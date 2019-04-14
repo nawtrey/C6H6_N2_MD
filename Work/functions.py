@@ -13,6 +13,7 @@ import numpy as np
 m_C     = 12.0107           # amu; mass of Carbon
 m_H     = 1.00794           # amu; mass of Hydrogen
 kB      = 1.3806488e-26     # kJ/K; Bolzmann's constant
+velocities = array[:,:3]
 
 #========================================================
 #============= Functions ================================
@@ -38,7 +39,7 @@ def kinetic_temperature(array, atomname):
     if atomname == "C":
         return np.sum(velocities**2)/(kB*Nf)
     elif atomname == "H":
-        return np.sum(velocities**2)/kB*Nf
+        return np.sum(velocities**2)/kB
     # kBoltzmann = 1.3806488e-23   # J/K
     # note: PBC simulations Nf = 3N - 3  (translation)
     #       droplet in vacuo: Nf = 3N - 6 (translation and rotation)
@@ -73,8 +74,8 @@ def rescale(array, temperature):
 
     ??? T must be in LJ units! ???
     """
-    current_temperature = kinetic_temperature(array)
-    return np.sqrt(temperature/current_temperature) * velocities
+    current_temperature = kinetic_temperature(array) ### This doesn't fulfill proper argument for kinetic_temperature
+    return np.sqrt(temperature/current_temperature) * array[:,:3]
 
 def V_LJ(r_vector, eps = 1.654e-21, sigma = 3.41e-10):
     """
