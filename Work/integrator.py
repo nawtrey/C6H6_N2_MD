@@ -17,6 +17,7 @@ import time
 import tqdm
 import numpy as np
 import multiprocessing as mp 
+import scipy.spatial.distance as dist
 # p = mp.Pool(processes=mp.cpu_count())	
 
 #=============================================================================================================
@@ -84,7 +85,7 @@ def initialize_positions():
 	return a
 
 
-def initial_velocities(atoms, T0):
+def initial_velocities(data, T0):
     """Generate initial velocities for *atoms*.
 
     - random velocities
@@ -103,9 +104,9 @@ def initial_velocities(atoms, T0):
     velocities : array
          Returns velocities as `(N, 3)` array.
     """
-    Natoms = len(atoms)
-    v = functions.random_velocities(Natoms)
-    v[:] = functions.remove_linear_momentum(v)
+	N = len(data)
+    v = functions.random_velocities(N)
+    v = functions.remove_linear_momentum(v)
     return functions.rescale(v, T0)
 
 def F_LJ(r_vector):
@@ -301,8 +302,7 @@ if __name__ == "__main__":
     #--------------------- Initialization -----------------------
     #------------------------------------------------------------
 
-	atoms, x_0 = positions.generate_benzene(np.array([0, 0, 0]))
-	N = len(atoms)
+	data = initialize_positions()
 	v_0 = initial_velocities(atoms, temp_0[sim_n])
 
     #------------------------------------------------------------
@@ -321,7 +321,7 @@ if __name__ == "__main__":
 	print("………….`|: |: : : : : : : : -,„_„„-~~~--~~--„_: : : : |")
 	print("…………..|: |: : : : : : : : : : : :--------~: : : : : |")
 	print("You've been visited by the propane god, I tell you hwat. Don't 'alt-tab' out of here or Hank Hill will bring the pro pain.")
-	print("Generating data files for", N, "atoms in simulation number", sim_n)
+	print("Generating data files bfor", N, "atoms in simulation number", sim_n)
 	start = time.time()                                             # Initial time stamp
 	results = dynamics(atoms, x_0, v_0, delta_t[sim_n], t_maximum[sim_n], filename="trajectory.xyz")
 	end = time.time()                                               # Final time stamp

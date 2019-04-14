@@ -69,27 +69,13 @@ def kinetic_temperature(array):
     C = np.sum(vC**2)/kB
     return  H + C
 
-def average_system_momentum(array):
-    """Caclulates average system momentum for a single benzene molecule at a specific time step.
+def average_system_momentum(vels):
+    """Caclulates average system momentum at a specific time step."""
+    return np.mean(vels, axis=0)
 
-      ~~~ ??? Needs to be further generalized in order to do multi-molecule simulations. ??? ~~~
-    """
-    N = len(array)
-    p_i = np.zeros((N, 3))
-    if N > 12:
-        print("Total system momentum calculation failed. {0} is out of range 12.".format(N))
-    for i in range(N):
-        p_i[i] = array[i][:3] * array[i,-1]
-    return np.mean(p_i, axis=0)
-
-def remove_linear_momentum(array):
-    p_avg = average_system_momentum(array)
-    N = len(array)
-    if N > 12:
-        print("Remove linear momentum calculation failed. {0} is out of range 12.".format(N))
-    v_new = np.zeros((N, 3))
-    for i in range(N):
-        v_new[i] = array[i][3] - p_avg/array[i,-1]
+def remove_linear_momentum(vels):
+    p_avg = average_system_momentum(vels)
+    v_new = vels-p_avg 
     return v_new
 
 
