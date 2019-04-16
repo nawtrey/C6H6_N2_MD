@@ -114,27 +114,6 @@ def rescale(vels, temperature):
     current_temperature = kinetic_temperature(vels)
     return np.sqrt(temperature/current_temperature) * vels
 
-def V_LJ(positions):
-    """
-    Calculates the LJ potential energy between a pair of atoms for a single time step
-
-    Parameters
-    ----------
-    positions : array
-        (Nx3) array of positions for every atom in system
-
-    Returns
-    -------
-    Potential Energy : float
-    """
-    epsilon = 1.654e-21/kB  # Kelvin
-    sigma = 0.341           # nm
-    r_mag = np.sqrt(np.sum(positions*positions))      # Calculates the magnitude of r_vector
-    if r_mag == 0.0:
-        return 0
-    else:
-        return 4*epsilon*((sigma/r_mag)**12 - (sigma/r_mag**6))
-
 def total_momentum(vels, masses):
     """
     Calculates the total linear momentum of the system of atoms
@@ -171,33 +150,65 @@ def KE(vels, masses):
     return 0.5*masses*np.sum(vels**2, axis = 1)
 
 def F_LJ(r):
-    """Lennard-Jones force vector
+    """
+    Lennard-Jones force vector
 
     Parameters
     ----------
     r : array
-        distance vector (x, y, z)
+        (1x3) array of r vector (rx, ry, rz)
 
     Returns
     -------
     Force : array
-        Returns force as (1 x 3) array --> [F_x1, F_y1, F_z1]
+        Returns force as (1x3) array --> (F_x1, F_y1, F_z1)
     """
-    rr = np.sum(r*r)                  # Calculates the dot product of r_vector with itself
-    r_mag = np.sqrt(rr)                             # Calculates the magnitude of the r_vector
+    rr = np.sum(r*r)                    # Calculates the dot product of r_vector with itself
+    r_mag = np.sqrt(rr)                 # Calculates the magnitude of the r_vector
     if r_mag == 0.0:
         return np.zeros((3))
     else:
-        rhat = r/r_mag                       # r_vector unit vector calculation
+        rhat = r/r_mag                  # r_vector unit vector calculation
         return 24*(2*r_mag**-13 - r_mag**-7)*rhat
 
-def MorsePotential(D_e, r, r_e, beta, k_e):
+def V_LJ(positions):
     """
-    D_e : well depth
-    r : distance between atoms
-    r_e : equilibrium bond distance
-    beta : controls 'width' of the potential
-    k_e : force constant at the minimum of the well
+    Calculates the potential energy due to the LJ potential 
+    between a pair of atoms for a single time step
+
+    Parameters
+    ----------
+    positions : array
+        (Nx3) array of positions for every atom in system
+
+    Returns
+    -------
+    Potential Energy : float
+    """
+    epsilon = 1.654e-21/kB  # Kelvin
+    sigma = 0.341           # nm
+    r_mag = np.sqrt(np.sum(positions*positions))      # Calculates the magnitude of r_vector
+    if r_mag == 0.0:
+        return 0
+    else:
+        return 4*epsilon*((sigma/r_mag)**12 - (sigma/r_mag**6))
+
+def V_M(D_e, r, r_e, beta, k_e):
+    """
+    Calculates the potential energy due to the Morse potential
+    between a pair of atoms for a single time step
+
+    Parameters
+    ----------
+    D_e     : well depth
+    r       : distance between atoms
+    r_e     : equilibrium bond distance
+    beta    : controls 'width' of the potential
+    k_e     : force constant at the minimum of the well
+
+    Returns
+    -------
+    Potential Energy : float
     """
     beta = np.sqrt(k_e/2*D_e)
     return D_e*(1-e**(-(beta*(positions-r_e)))**2
