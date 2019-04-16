@@ -90,7 +90,7 @@ def F_LJ(r):
         rhat = r/r_mag                       # r_vector unit vector calculation
         return 24*(2*r_mag**-13 - r_mag**-7)*rhat
 
-def MorsePotential(D_e, r, r_e, beta):
+def MorsePotential(D_e, r, r_e, beta, k_e):
     """
     D_e : well depth
     r : distance between atoms
