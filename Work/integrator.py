@@ -16,9 +16,9 @@ import positions
 import time
 import tqdm
 import numpy as np
-import multiprocessing as mp 
+import multiprocessing as mp
 import scipy.spatial.distance as dist
-# p = mp.Pool(processes=mp.cpu_count())	
+# p = mp.Pool(processes=mp.cpu_count())
 
 #=============================================================================================================
 #================================ Initial Conditions =========================================================
@@ -32,7 +32,7 @@ kB          = 1.3806488e-23     # Bolzmann's constant [J * K^{-1}]
 #=========== Integrator Parameters =======================
 
 # Simulation number
-sim_n       = 2         
+sim_n       = 2
 
 # Initial temperature in Kelvin
 temp_0 = { 1 : 94.4,
@@ -109,27 +109,6 @@ def initial_velocities(data, T0):
     v = functions.remove_linear_momentum(v)
     return functions.rescale(v, T0)
 
-def F_LJ(r_vector):
-    """Lennard-Jones force vector
-
-    Parameters
-    ----------
-    r : array
-        distance vector (x, y, z)
-
-    Returns
-    -------
-    Force : array
-        Returns force as (1 x 3) array --> [F_x1, F_y1, F_z1]
-    """
-    rr = np.sum(r_vector*r_vector)                  # Calculates the dot product of r_vector with itself
-    r_mag = np.sqrt(rr)                             # Calculates the magnitude of the r_vector
-    if r_mag == 0.0:
-        return np.zeros((3))
-    else:
-        rhat = r_vector/r_mag                       # r_vector unit vector calculation
-        return 24*(2*r_mag**-13 - r_mag**-7)*rhat
-
 # def F_Morse(r_vector, bondtype="CC"):
 # 	"""Morse force vector
 
@@ -143,11 +122,11 @@ def F_LJ(r_vector):
 #     Force : array
 #         Returns force as (1 x 3) array --> [F_x1, F_y1, F_z1]
 # 	"""
-	
+
 # 	# D_CC values: 518, 480, 485, 493 in kJ/mol
 # 	# Force constant for OPLS-AA: 392459.2 kJ/mol*nm^2
 # 	R_CC = 1.39/3.4 									# Equilibrium distance for C-C bonds in benzene
-# 	D_CC = 0											
+# 	D_CC = 0
 # 	v_CC = 0
 # 	mu_CC = 1
 
@@ -233,7 +212,7 @@ def dynamics(atoms, x0, v0, dt, t_max, filename="trajectory.xyz"):
     f_ij = np.zeros((N, N, 3))
     for i in range(0, N):
         for j in range(0, i):
-            f_ij[i, j] = F_LJ(r_ij[i, j])
+            f_ij[i, j] = functions.F_LJ(r_ij[i, j])
             f_ij[j, i] = -f_ij[i, j]
 
     #- - - - Total Force on each particle - - - -
@@ -263,7 +242,7 @@ def dynamics(atoms, x0, v0, dt, t_max, filename="trajectory.xyz"):
         f_ijdt = np.zeros((N, N, 3))
         for i in range(0, N):
             for j in range(0, i):
-                f_ijdt[i, j] = F_LJ(r_ijdt[i, j])
+                f_ijdt[i, j] = functions.F_LJ(r_ijdt[i, j])
                 f_ijdt[j, i] = -f_ijdt[i, j]
 
         # Now that we have all individual j forces acting on particle i after
@@ -284,7 +263,7 @@ def dynamics(atoms, x0, v0, dt, t_max, filename="trajectory.xyz"):
     if filename:
         with open('trajectory.xyz', 'w') as xyzfile:
             for i in range(0, nsteps):
-                IO.write_xyz_frame(xyzfile, atoms, r[i], i, "simulation")     # Writes all (x, y, z) data to file 
+                IO.write_xyz_frame(xyzfile, atoms, r[i], i, "simulation")     # Writes all (x, y, z) data to file
 
     if filename:
         with open('velocities.xyz', 'w') as xyzfile:
