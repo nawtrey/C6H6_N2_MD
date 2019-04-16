@@ -25,26 +25,13 @@ def random_velocities(N):
     """Takes a number of particles to create an array of random velocities"""
     return np.random.rand(N, 3) - 0.5
 
-def instantaneous_temperature(array):
-    """
-    Calculates the instantaneous temperature of the molecule for a single time step
-
-    ~~~ NEEDS WORK (?) ~~~
-
-    """
-    N = len(array)
+def instantaneous_temperature(vels, masses):
+    """Calculates the instantaneous temperature of the molecule for a single time step"""
+    N = len(vels)
     Nf = 3*N - 6
-    if N > 12:
-        print("Instantaneous temperature calculation failed. {0} is out of range 12.".format(N))
-    temp = np.zeros(N)
-    for i in range(N):
-        if array[i,-1] == m_C:
-            temp[i] = np.sum(array[i][:3]**2) * array[i,-1] / kB
-        elif array[i,-1] == m_H:
-            temp[i] = np.sum(array[i][:3]**2) * array[i,-1] / kB*Nf
-    return temp
+    return np.sum(vels**2, axis=1) * masses / kB*Nf
 
-def kinetic_temperature(array):
+def kinetic_temperature(vels, masses):
     """
     Calculates the kinetic temperature of the molecule
     ----------------------
@@ -52,71 +39,35 @@ def kinetic_temperature(array):
     note: PBC simulations Nf = 3N - 3  (translation)
           droplet in vacuo: Nf = 3N - 6 (translation and rotation)
           droplet with external spherical boundary potential: Nf = 3N-3 (rotation)
-
-    ~~~ NEEDS WORK (?) ~~~
-
     """
-    N = len(array)
+    N = len(vels)
     Nf = 3*N - 6
-    vC = np.zeros((N, 3))
-    vH = np.zeros((N, 3))
-    for i in range(N):
-        if array[i,-1] == m_C:
-            vC[i] = array[i][:3]
-        elif array[i,-1] == m_H:
-            vH[i] = array[i][:3]
-    H = np.sum(vH**2)/(kB*Nf)
-    C = np.sum(vC**2)/kB
-    return  H + C
+    return np.sum(vels**2)/kB*Nf
 
-def average_system_momentum(vels):
-    """Caclulates average system momentum at a specific time step."""
-    return np.mean(vels, axis=0)
-
-def remove_linear_momentum(vels):
-    p_avg = average_system_momentum(vels)
-    v_new = vels-p_avg 
-    return v_new
+def remove_linear_momentum(vels, masses):
+    return vels - np.mean(vels*masses, axis=0)
 
 
-def rescale(array, temperature):
-    """
-    Rescale velocities so that they correspond to temperature T.
+def rescale(vels, temperature):
+    """Rescale velocities so that they correspond to temperature T."""
+    current_temperature = kinetic_temperature(vels)
+    return np.sqrt(temperature/current_temperature) * vels
 
-    ~~~ NEEDS WORK (?) ~~~
-
-    """
-    current_temperature = kinetic_temperature(array)
-    return np.sqrt(temperature/current_temperature) * array[:,:3]
-
-def V_LJ(r_vector):
-    """
-    Calculates the potential energy of a single particle
+def V_LJ(positions):
+    """Calculates the potential energy of a single particle
     Note: here, r_vector is relative to the origin (0, 0, 0)
     where as r_ij are the radii of i particles to j particles.
-
-    ~~~ NEEDS WORK (?) ~~~
     """
-    r_mag = np.sqrt(np.sum(r_vector*r_vector))      # Calculates the magnitude of r_vector
+    r_mag = np.sqrt(np.sum(positions*positions))      # Calculates the magnitude of r_vector
     if r_mag == 0.0:
         return 0
     else:
         return 4*eps*((sigma/r_mag)**12 - (sigma/r_mag**6))
 
-def total_momentum(array):
+def total_momentum(vels, masses):
     """Total linear momentum"""
-    velocities = array[:,:3]
-    masses = array[:,[3]]
-    momentum = velocities*masses
-    return np.sum(momentum, axis=0)
+    return np.sum(vels*masses, axis=0)
 
-def KE(array):
-     """Calculates the kinetic energy of a single particle
-
-     ~~~ NEEDS WORK (?) ~~~
-
-     """
-     velocities = array[:,:3]
-     masses = array[:,[3]]
-     v_mag = np.sqrt(np.sum(velocities*velocities))      # Calculates the magnitude of velocities
-     return 0.5*mass*v_mag**2
+def KE(vels, masses):
+     """Calculates the kinetic energy of a single particle"""
+     return 0.5*masses*np.sum(vels**2, axis = 1)
