@@ -102,12 +102,15 @@ if __name__ == "__main__":												# do this stuff when script is executed
 	
 	con_permol = np.zeros((Nbenz,12, 3))
 	for i in range(Nbenz):
-	    con_permol[i] = con_array + i*next_mol 
+	    con_permol[i] = con_array + i*next_mol
 	
 	connections = []
 	for i in range(Nbenz):
-	    for j in range(12):
-	        connections.append(list(con_permol[i,j]))
+		for j in range(12):
+			alist = []
+			for k in range(3):
+				alist.append(int(con_permol[i,j,k]))
+			connections.append(alist)
 	
 	info = list(zip(mol_num, atomnumber, atomname, atommass, newpos, connections)) 			# Takes all data and puts in single list where each index corresponds to a specific atom
 	

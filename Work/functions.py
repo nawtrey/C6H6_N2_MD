@@ -71,6 +71,7 @@ def kinetic_temperature(array):
 
 def average_system_momentum(vels):
     """Caclulates average system momentum at a specific time step."""
+	#####NEED TO DO WITH CORRECT MASS
     return np.mean(vels, axis=0)
 
 def remove_linear_momentum(vels):
