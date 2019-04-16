@@ -61,6 +61,7 @@ t_maximum  = { 1 : 10,
 #=============================================================================================================
 #============================================ Integrator =====================================================
 #=============================================================================================================
+
 def initialize_positions():
 	with open('Data.txt' ,'r') as f:
 	    dtype = np.dtype([('molN',np.float32),('atomN',np.float32),('type',str,
@@ -109,40 +110,6 @@ def initial_velocities(data, T0):
     v = functions.remove_linear_momentum(v)
     return functions.rescale(v, T0)
 
-# def F_Morse(r_vector, bondtype="CC"):
-# 	"""Morse force vector
-
-# 	    Parameters
-#     ----------
-#     r : array
-#         distance vector (x, y, z)
-
-#     Returns
-#     -------
-#     Force : array
-#         Returns force as (1 x 3) array --> [F_x1, F_y1, F_z1]
-# 	"""
-
-# 	# D_CC values: 518, 480, 485, 493 in kJ/mol
-# 	# Force constant for OPLS-AA: 392459.2 kJ/mol*nm^2
-# 	R_CC = 1.39/3.4 									# Equilibrium distance for C-C bonds in benzene
-# 	D_CC = 0
-# 	v_CC = 0
-# 	mu_CC = 1
-
-# 	# D_HC = 472.3736
-# 	R_HC = 1.09/3.4 									# Equilibrium distance for H-C bonds
-# 	D_HC = 0
-# 	v_HC = 0
-# 	mu_HC = 1
-
-# 	if bondtype == "CC":
-# 		B = np.pi*v_CC*np.sqrt(2*mu_CC/D_CC)
-# 		return 2*B*D_CC*(exp(2*B*(R_CC - r_vector)) - exp(B*(R_CC - r_vector)))
-# 	elif bondtype == "HC":
-# 		B = np.pi*v_HC*np.sqrt(2*mu_HC/D_HC)
-# 		return 2*B*D_HC*(exp(2*B*(R_HC - r_vector)) - exp(B*(R_HC - r_vector)))
-
 def dynamics(atoms, x0, v0, dt, t_max, filename="trajectory.xyz"):
     """Integrate equations of motion.
 
@@ -186,17 +153,6 @@ def dynamics(atoms, x0, v0, dt, t_max, filename="trajectory.xyz"):
     for i in range(0, N):
         v[0, i] = v0[i]     # nstep x N x 3 array
 
-    # Need to calculate the force between every pair of particles for all time t; F_ij(r, t). Note: F_ij = -F_ji
-    # Since F_LJ is a function of only the r vector, the radius between particles needs to be found.
-    # r[0,0] is the initial position of atom(0) at t = t_0. r[0,1] is the initial position of atom(1) at t = t_0.
-    # Thus, r[0,1] - r[0,0] is the distance between atom(1) and atom(0) at time t = t_0. This can be generalized
-    # to r_j[0, j] = r[0, 0] - r[0, j], which, if a for-loop is implemented (over j in range(0, N)), will calculate
-    # the radius between atom(0) and all other particles for t = t_0. With an array created by iterating over j, we
-    # could then calculate the forces between atom(0) and all other particles in the lattice. But this is not all
-    # of the force calculations required; atom(0) is only one particle in the system. So, to calculate all other
-    # forces, all radii must be calculated. This array will be denoted as r_ij. This array can be created by
-    # taking r_j[0, j] = r[0, 0] - r[0, j] array and iterating over i:
-
     # Array of all initial radii for all time steps
     r_ij = np.zeros((N, N, 3))
     for i in range(0, N):
@@ -226,11 +182,6 @@ def dynamics(atoms, x0, v0, dt, t_max, filename="trajectory.xyz"):
         for j in range(0, N):
             vhalf[j] = v[t, j] + .5*dt*f_tot[j]
             r[t+1, j] = r[t, j] + dt*vhalf[j]
-
-        # Need to calculate the new force acting on all particles after time dt.
-        # This requires the radii between particle i and all particles j to be
-        # calculated after time dt. So, just like we did for the initial radii
-        # above, we will go ahead and recalculate the radii for t = t_0 + dt:
 
         r_ijdt = np.zeros((N, N, 3))
         for i in range(0, N):
