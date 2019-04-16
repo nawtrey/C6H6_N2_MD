@@ -94,7 +94,6 @@ def remove_linear_momentum(vels, masses):
     """
     return vels - np.mean(vels*masses, axis=0)
 
-
 def rescale(vels, temperature):
     """
     Rescale velocities so that they correspond to temperature T.
@@ -170,3 +169,35 @@ def KE(vels, masses):
     Kinetic Energy : float
     """
     return 0.5*masses*np.sum(vels**2, axis = 1)
+
+def F_LJ(r):
+    """Lennard-Jones force vector
+
+    Parameters
+    ----------
+    r : array
+        distance vector (x, y, z)
+
+    Returns
+    -------
+    Force : array
+        Returns force as (1 x 3) array --> [F_x1, F_y1, F_z1]
+    """
+    rr = np.sum(r*r)                  # Calculates the dot product of r_vector with itself
+    r_mag = np.sqrt(rr)                             # Calculates the magnitude of the r_vector
+    if r_mag == 0.0:
+        return np.zeros((3))
+    else:
+        rhat = r/r_mag                       # r_vector unit vector calculation
+        return 24*(2*r_mag**-13 - r_mag**-7)*rhat
+
+def MorsePotential(D_e, r, r_e, beta, k_e):
+    """
+    D_e : well depth
+    r : distance between atoms
+    r_e : equilibrium bond distance
+    beta : controls 'width' of the potential
+    k_e : force constant at the minimum of the well
+    """
+    beta = np.sqrt(k_e/2*D_e)
+    return D_e*(1-e**(-(beta*(positions-r_e)))**2
