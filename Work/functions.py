@@ -193,7 +193,7 @@ def V_LJ(positions):
     else:
         return 4*epsilon*((sigma/r_mag)**12 - (sigma/r_mag**6))
 
-def V_M(D_e, r, r_e, beta, k_e):
+def V_M(D_e, r, r_e, k_e):
     """
     Calculates the potential energy due to the Morse potential
     between a pair of atoms for a single time step
