@@ -16,9 +16,9 @@ import positions
 import time
 import tqdm
 import numpy as np
-import multiprocessing as mp 
+import multiprocessing as mp
 import scipy.spatial.distance as dist
-# p = mp.Pool(processes=mp.cpu_count())	
+# p = mp.Pool(processes=mp.cpu_count())
 
 #=============================================================================================================
 #================================ Initial Conditions =========================================================
@@ -32,7 +32,7 @@ kB          = 1.3806488e-23     # Bolzmann's constant [J * K^{-1}]
 #=========== Integrator Parameters =======================
 
 # Simulation number
-sim_n       = 2         
+sim_n       = 2
 
 # Initial temperature in Kelvin
 temp_0 = { 1 : 94.4,
@@ -61,6 +61,7 @@ t_maximum  = { 1 : 10,
 #=============================================================================================================
 #============================================ Integrator =====================================================
 #=============================================================================================================
+
 def initialize_positions():
 	with open('Data.txt' ,'r') as f:
 	    dtype = np.dtype([('molN',np.float32),('atomN',np.float32),('type',str,
@@ -204,17 +205,6 @@ def dynamics(atoms, x0, v0, dt, t_max, filename="trajectory.xyz"):
     for i in range(0, N):
         v[0, i] = v0[i]     # nstep x N x 3 array
 
-    # Need to calculate the force between every pair of particles for all time t; F_ij(r, t). Note: F_ij = -F_ji
-    # Since F_LJ is a function of only the r vector, the radius between particles needs to be found.
-    # r[0,0] is the initial position of atom(0) at t = t_0. r[0,1] is the initial position of atom(1) at t = t_0.
-    # Thus, r[0,1] - r[0,0] is the distance between atom(1) and atom(0) at time t = t_0. This can be generalized
-    # to r_j[0, j] = r[0, 0] - r[0, j], which, if a for-loop is implemented (over j in range(0, N)), will calculate
-    # the radius between atom(0) and all other particles for t = t_0. With an array created by iterating over j, we
-    # could then calculate the forces between atom(0) and all other particles in the lattice. But this is not all
-    # of the force calculations required; atom(0) is only one particle in the system. So, to calculate all other
-    # forces, all radii must be calculated. This array will be denoted as r_ij. This array can be created by
-    # taking r_j[0, j] = r[0, 0] - r[0, j] array and iterating over i:
-
     # Array of all initial radii for all time steps
     r_ij = np.zeros((N, N, 3))
     for i in range(0, N):
@@ -230,7 +220,7 @@ def dynamics(atoms, x0, v0, dt, t_max, filename="trajectory.xyz"):
     f_ij = np.zeros((N, N, 3))
     for i in range(0, N):
         for j in range(0, i):
-            f_ij[i, j] = F_LJ(r_ij[i, j])
+            f_ij[i, j] = functions.F_LJ(r_ij[i, j])
             f_ij[j, i] = -f_ij[i, j]
 
     #- - - - Total Force on each particle - - - -
@@ -245,11 +235,6 @@ def dynamics(atoms, x0, v0, dt, t_max, filename="trajectory.xyz"):
             vhalf[j] = v[t, j] + .5*dt*f_tot[j]
             r[t+1, j] = r[t, j] + dt*vhalf[j]
 
-        # Need to calculate the new force acting on all particles after time dt.
-        # This requires the radii between particle i and all particles j to be
-        # calculated after time dt. So, just like we did for the initial radii
-        # above, we will go ahead and recalculate the radii for t = t_0 + dt:
-
         r_ijdt = np.zeros((N, N, 3))
         for i in range(0, N):
             for j in range(0, i):
@@ -260,7 +245,7 @@ def dynamics(atoms, x0, v0, dt, t_max, filename="trajectory.xyz"):
         f_ijdt = np.zeros((N, N, 3))
         for i in range(0, N):
             for j in range(0, i):
-                f_ijdt[i, j] = F_LJ(r_ijdt[i, j])
+                f_ijdt[i, j] = functions.F_LJ(r_ijdt[i, j])
                 f_ijdt[j, i] = -f_ijdt[i, j]
 
         # Now that we have all individual j forces acting on particle i after
@@ -281,7 +266,7 @@ def dynamics(atoms, x0, v0, dt, t_max, filename="trajectory.xyz"):
     if filename:
         with open('trajectory.xyz', 'w') as xyzfile:
             for i in range(0, nsteps):
-                IO.write_xyz_frame(xyzfile, atoms, r[i], i, "simulation")     # Writes all (x, y, z) data to file 
+                IO.write_xyz_frame(xyzfile, atoms, r[i], i, "simulation")     # Writes all (x, y, z) data to file
 
     if filename:
         with open('velocities.xyz', 'w') as xyzfile:
