@@ -76,6 +76,11 @@ def kinetic_temperature(vels, masses):
     Nf = 3*N - 6
     return np.sum(vels**2)/kB*Nf
 
+def average_system_momentum(vels):
+    """Caclulates average system momentum at a specific time step."""
+	#####NEED TO DO WITH CORRECT MASS
+    return np.mean(vels, axis=0)
+
 def remove_linear_momentum(vels, masses):
     """
     Removes linear momentum of entire system of atoms
@@ -211,4 +216,4 @@ def V_M(D_e, r, r_e, k_e):
     Potential Energy : float
     """
     beta = np.sqrt(k_e/2*D_e)
-    return D_e*(1-e**(-(beta*(positions-r_e)))**2
+    return D_e*(1-e**(-(beta*(positions-r_e))))**2

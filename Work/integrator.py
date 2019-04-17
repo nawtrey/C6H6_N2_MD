@@ -18,6 +18,7 @@ import tqdm
 import numpy as np
 import multiprocessing as mp
 import scipy.spatial.distance as dist
+import subprocess
 # p = mp.Pool(processes=mp.cpu_count())
 
 #=============================================================================================================
@@ -64,9 +65,8 @@ t_maximum  = { 1 : 10,
 
 def initialize_positions():
 	with open('Data.txt' ,'r') as f:
-	    dtype = np.dtype([('molN',np.float32),('atomN',np.float32),('type',str,
-	(1)),('mass',np.float32),('positions',np.float32,(3)),('connections',np.flo
-	at32,(3))])
+	    dtype = np.dtype([('molN',np.float32),('atomN',np.float32),('type',str,(1)),
+						  ('mass',np.float32),('positions',np.float32,(3)),('connections',np.float32,(3))])
 	    ncols = sum(1 for _ in f)
 	    a = np.empty(ncols,dtype=dtype)
 	with open('Data.txt' ,'r') as g:
@@ -87,28 +87,80 @@ def initialize_positions():
 
 
 def initial_velocities(data, T0):
-    """Generate initial velocities for *atoms*.
+	"""Generate initial velocities for *atoms*.
+	
+	- random velocities
+	- total momentum zero
+	- kinetic energy corresponds to temperature T0
+	
+	Parameters
+	----------
+	atoms : list
+	 list of atom names, e.g. `['Ar', 'Ar', ...]`
+	T0 : float
+	 initial temperature in K
+	
+	Returns
+	-------
+	velocities : array
+	 Returns velocities as `(N, 3)` array.
+	"""
+	N = len(data)
+	v = functions.random_velocities(N)
+	v = functions.remove_linear_momentum(v)
+	return functions.rescale(v, T0)
 
-    - random velocities
-    - total momentum zero
-    - kinetic energy corresponds to temperature T0
+def F_LJ(r1,r2):
+    """Lennard-Jones force vector
 
     Parameters
     ----------
-    atoms : list
-         list of atom names, e.g. `['Ar', 'Ar', ...]`
-    T0 : float
-         initial temperature in K
+    r : array
+        distance vector (x, y, z)
 
     Returns
     -------
-    velocities : array
-         Returns velocities as `(N, 3)` array.
+    Force : array
+        Returns force as (1 x 3) array --> [F_x1, F_y1, F_z1]
     """
-	N = len(data)
-    v = functions.random_velocities(N)
-    v = functions.remove_linear_momentum(v)
-    return functions.rescale(v, T0)
+    r = r2-r1	  	 	             # Calculates the dot product of r_vector with itself
+    r_mag = dist.cdist(r)            # Calculates the magnitude of the r_vector
+    rhat = r/r_mag    		         # r_vector unit vector calculation
+	#check units here return 24*(2*r_mag**-13 - r_mag**-7)*rhat 
+
+def F_Morse(r_vector, bondtype="CC"):
+ 	"""Morse force vector
+
+ 	    Parameters
+     ----------
+     r : array
+         distance vector (x, y, z)
+
+     Returns
+     -------
+     Force : array
+         Returns force as (1 x 3) array --> [F_x1, F_y1, F_z1]
+ 	"""
+   
+ 	# D_CC values: 518, 480, 485, 493 in kJ/mol
+ 	# Force constant for OPLS-AA: 392459.2 kJ/mol*nm^2
+ 	R_CC = 1.39/3.4 									# Equilibrium distance for C-C bonds in benzene
+ 	D_CC = 0											
+ 	v_CC = 0
+ 	mu_CC = 1
+
+ 	# D_HC = 472.3736
+ 	R_HC = 1.09/3.4 									# Equilibrium distance for H-C bonds
+ 	D_HC = 0
+ 	v_HC = 0
+ 	mu_HC = 1
+
+ 	if bondtype == "CC":
+ 		B = np.pi*v_CC*np.sqrt(2*mu_CC/D_CC)
+ 		return 2*B*D_CC*(exp(2*B*(R_CC - r_vector)) - exp(B*(R_CC - r_vector)))
+ 	elif bondtype == "HC":
+ 		B = np.pi*v_HC*np.sqrt(2*mu_HC/D_HC)
+ 		return 2*B*D_HC*(exp(2*B*(R_HC - r_vector)) - exp(B*(R_HC - r_vector)))
 
 def dynamics(atoms, x0, v0, dt, t_max, filename="trajectory.xyz"):
     """Integrate equations of motion.
@@ -228,10 +280,14 @@ def dynamics(atoms, x0, v0, dt, t_max, filename="trajectory.xyz"):
 #=============================================================================================================
 
 if __name__ == "__main__":
+	import argparse
+	aprser = ArugmentParser()
+	parser.add_argument('-N', help="number of benzene")
+	args = parser.parse_args()
     #------------------------------------------------------------
     #--------------------- Initialization -----------------------
     #------------------------------------------------------------
-
+	os.system('python positions.py --Nmolecules {0}'.format(int(args.N)))
 	data = initialize_positions()
 	v_0 = initial_velocities(atoms, temp_0[sim_n])
 
