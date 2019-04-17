@@ -18,6 +18,7 @@ import tqdm
 import numpy as np
 import multiprocessing as mp
 import scipy.spatial.distance as dist
+import subprocess
 # p = mp.Pool(processes=mp.cpu_count())
 
 #=============================================================================================================
@@ -64,9 +65,8 @@ t_maximum  = { 1 : 10,
 
 def initialize_positions():
 	with open('Data.txt' ,'r') as f:
-	    dtype = np.dtype([('molN',np.float32),('atomN',np.float32),('type',str,
-	(1)),('mass',np.float32),('positions',np.float32,(3)),('connections',np.flo
-	at32,(3))])
+	    dtype = np.dtype([('molN',np.float32),('atomN',np.float32),('type',str,(1)),
+						  ('mass',np.float32),('positions',np.float32,(3)),('connections',np.float32,(3))])
 	    ncols = sum(1 for _ in f)
 	    a = np.empty(ncols,dtype=dtype)
 	with open('Data.txt' ,'r') as g:
@@ -87,28 +87,28 @@ def initialize_positions():
 
 
 def initial_velocities(data, T0):
-    """Generate initial velocities for *atoms*.
-
-    - random velocities
-    - total momentum zero
-    - kinetic energy corresponds to temperature T0
-
-    Parameters
-    ----------
-    atoms : list
-         list of atom names, e.g. `['Ar', 'Ar', ...]`
-    T0 : float
-         initial temperature in K
-
-    Returns
-    -------
-    velocities : array
-         Returns velocities as `(N, 3)` array.
-    """
+	"""Generate initial velocities for *atoms*.
+	
+	- random velocities
+	- total momentum zero
+	- kinetic energy corresponds to temperature T0
+	
+	Parameters
+	----------
+	atoms : list
+	 list of atom names, e.g. `['Ar', 'Ar', ...]`
+	T0 : float
+	 initial temperature in K
+	
+	Returns
+	-------
+	velocities : array
+	 Returns velocities as `(N, 3)` array.
+	"""
 	N = len(data)
-    v = functions.random_velocities(N)
-    v = functions.remove_linear_momentum(v)
-    return functions.rescale(v, T0)
+	v = functions.random_velocities(N)
+	v = functions.remove_linear_momentum(v)
+	return functions.rescale(v, T0)
 
 def F_LJ(r1,r2):
     """Lennard-Jones force vector
@@ -126,7 +126,7 @@ def F_LJ(r1,r2):
     r = r2-r1	  	 	             # Calculates the dot product of r_vector with itself
     r_mag = dist.cdist(r)            # Calculates the magnitude of the r_vector
     rhat = r/r_mag    		         # r_vector unit vector calculation
-"""we need to check units here"""    return 24*(2*r_mag**-13 - r_mag**-7)*rhat 
+	#check units here return 24*(2*r_mag**-13 - r_mag**-7)*rhat 
 
 def F_Morse(r_vector, bondtype="CC"):
  	"""Morse force vector
@@ -287,7 +287,7 @@ if __name__ == "__main__":
     #------------------------------------------------------------
     #--------------------- Initialization -----------------------
     #------------------------------------------------------------
-	%run positions.py --Nmolecules int(args.N)
+	os.system('python positions.py --Nmolecules {0}'.format(int(args.N)))
 	data = initialize_positions()
 	v_0 = initial_velocities(atoms, temp_0[sim_n])
 

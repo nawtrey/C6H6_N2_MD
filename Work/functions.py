@@ -216,4 +216,4 @@ def V_M(D_e, r, r_e, beta, k_e):
     Potential Energy : float
     """
     beta = np.sqrt(k_e/2*D_e)
-    return D_e*(1-e**(-(beta*(positions-r_e)))**2
+    return D_e*(1-e**(-(beta*(positions-r_e))))**2
