@@ -19,6 +19,7 @@ import numpy as np
 import multiprocessing as mp
 import scipy.spatial.distance as dist
 import subprocess
+import os
 # p = mp.Pool(processes=mp.cpu_count())
 
 #=============================================================================================================
@@ -75,8 +76,10 @@ def initialize_positions():
 	        b = line.split('\t')
 	        k = 0
 	        for j in list(a.dtype.fields.keys()):
-	            if (k==4) or (k==5):
-	                    a[i][j]=[float(l) for l in b[k].strip('\n').strip('[]').split(',')]
+	            if (k==4):
+	                    a[i][j]=[float(l) for l in b[k].strip('[]').split(',')]
+	            elif (k==5):
+	                    a[i][j]=[l for l in b[k].strip('\n').strip('[]').split(',')]
 	            elif k==2:
 	                a[i][j]=str(b[k])
 	            else:
@@ -281,7 +284,7 @@ def dynamics(atoms, x0, v0, dt, t_max, filename="trajectory.xyz"):
 
 if __name__ == "__main__":
 	import argparse
-	aprser = ArugmentParser()
+	parser = argparse.ArgumentParser()
 	parser.add_argument('-N', help="number of benzene")
 	args = parser.parse_args()
     #------------------------------------------------------------
