@@ -200,7 +200,7 @@ def initial_velocities(data, T0):
 	v = np.array([p[i]/data[i][3] for i in range(len(data))])
 	return functions.rescale(v, T0)
 
-def dynamics(atoms, x0, v0, dt, t_max, filename="trajectory.xyz"):
+def dynamics(data, x0, v0, dt, t_max, filename="trajectory.xyz"):
     """Integrate equations of motion.
 
     Parameters
@@ -236,13 +236,11 @@ def dynamics(atoms, x0, v0, dt, t_max, filename="trajectory.xyz"):
 
     # Initial positions for every particle for t = 0
     r = np.zeros((nsteps, N, 3))
-    for i in range(0, N):
-        r[0, i] = x0[i]        # N x 3 array
+	r[0] = x0
 
     # Initial velocities for every particle for t = 0
     v = np.zeros((nsteps, N, 3))
-    for i in range(0, N):
-        v[0, i] = v0[i]     # nstep x N x 3 array
+	v[0] = v0
 
     # Array of all initial radii for all time steps
     r_ij = np.zeros((N, N, 3))
