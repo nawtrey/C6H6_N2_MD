@@ -64,7 +64,7 @@ t_maximum  = { 1 : 10,
 #============================================ Integrator =====================================================
 #=============================================================================================================
 
-def initialize_positions():
+def import_data():
 	with open('Data.txt' ,'r') as f:
 	    dtype = np.dtype([('molN',np.float32),('atomN',np.float32),('type',str,(1)),
 						  ('mass',np.float32),('positions',np.float32,(3)),('connections',np.float32,(3))])
@@ -88,6 +88,8 @@ def initialize_positions():
 	        i+=1
 	return a
 
+def initialize_positions():
+	return np.array([data[i][4] for i in range(len(data))])
 
 def initial_velocities(data, T0):
 	"""Generate initial velocities for *atoms*.
@@ -109,8 +111,9 @@ def initial_velocities(data, T0):
 	 Returns velocities as `(N, 3)` array.
 	"""
 	N = len(data)
-	v = functions.random_velocities(N)
-	v = functions.remove_linear_momentum(v)
+	p0 = functions.random_momenta(N)
+	p = functions.remove_linear_momentum(p0)
+	v = np.array([p[i]/data[i][3] for i in range(len(data))])
 	return functions.rescale(v, T0)
 
 def F_LJ(r1,r2):
@@ -291,7 +294,8 @@ if __name__ == "__main__":
     #--------------------- Initialization -----------------------
     #------------------------------------------------------------
 	os.system('python positions.py --Nmolecules {0}'.format(int(args.N)))
-	data = initialize_positions()
+	data = import_data()
+	positions = initialize_positions(data)
 	v_0 = initial_velocities(atoms, temp_0[sim_n])
 
     #------------------------------------------------------------
