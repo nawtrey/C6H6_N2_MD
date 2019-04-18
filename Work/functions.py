@@ -16,9 +16,9 @@ kB      = 1.3806488e-23     # J/K; Bolzmann's constant
 #============= Functions ================================
 #========================================================
 
-def random_velocities(N):
+def random_momenta(N):
     """
-    Takes a number of particles to create an array of random velocities
+    Takes a number of particles to create an array of random momenta
 
     Parameters
     ----------
@@ -81,7 +81,7 @@ def average_system_momentum(vels):
 	#####NEED TO DO WITH CORRECT MASS
     return np.mean(vels, axis=0)
 
-def remove_linear_momentum(vels, masses):
+def remove_linear_momentum(moms):
     """
     Removes linear momentum of entire system of atoms
 
@@ -97,7 +97,7 @@ def remove_linear_momentum(vels, masses):
     Velocities : array
         (Nx3) array of new velocities (Vx, Vy, Vz)
     """
-    return vels - np.mean(vels*masses, axis=0)
+    return moms - np.mean(moms, axis=0)
 
 def rescale(vels, temperature):
     """

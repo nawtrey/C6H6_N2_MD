@@ -18,6 +18,8 @@ import tqdm
 import numpy as np
 import multiprocessing as mp
 import scipy.spatial.distance as dist
+import subprocess
+import os
 # p = mp.Pool(processes=mp.cpu_count())
 
 #=============================================================================================================
@@ -139,13 +141,15 @@ Bonds =
 
 
 
-Nonbonds = {}
+# Nonbonds = {}
 
 #=============================================================================================================
 #============================================ Integrator =====================================================
 #=============================================================================================================
-/;.;
+
 def initialize_positions():
+
+def import_data():
 	with open('Data.txt' ,'r') as f:
 	    dtype = np.dtype([('molN',np.float32),('atomN',np.float32),('type',str,
 	(1)),('mass',np.float32),('positions',np.float32,(3)),('connections',np.flo
@@ -158,8 +162,10 @@ def initialize_positions():
 	        b = line.split('\t')
 	        k = 0
 	        for j in list(a.dtype.fields.keys()):
-	            if (k==4) or (k==5):
-	                    a[i][j]=[float(l) for l in b[k].strip('\n').strip('[]').split(',')]
+	            if (k==4):
+	                    a[i][j]=[float(l) for l in b[k].strip('[]').split(',')]
+	            elif (k==5):
+	                    a[i][j]=[l for l in b[k].strip('\n').strip('[]').split(',')]
 	            elif k==2:
 	                a[i][j]=str(b[k])
 	            else:
@@ -168,30 +174,33 @@ def initialize_positions():
 	        i+=1
 	return a
 
+def initialize_positions():
+	return np.array([data[i][4] for i in range(len(data))])
 
 def initial_velocities(data, T0):
-    """Generate initial velocities for *atoms*.
-
-    - random velocities
-    - total momentum zero
-    - kinetic energy corresponds to temperature T0
-
-    Parameters
-    ----------
-    atoms : list
-         list of atom names, e.g. `['Ar', 'Ar', ...]`
-    T0 : float
-         initial temperature in K
-
-    Returns
-    -------
-    velocities : array
-         Returns velocities as `(N, 3)` array.
-    """
+	"""Generate initial velocities for *atoms*.
+	
+	- random velocities
+	- total momentum zero
+	- kinetic energy corresponds to temperature T0
+	
+	Parameters
+	----------
+	atoms : list
+	 list of atom names, e.g. `['Ar', 'Ar', ...]`
+	T0 : float
+	 initial temperature in K
+	
+	Returns
+	-------
+	velocities : array
+	 Returns velocities as `(N, 3)` array.
+	"""
 	N = len(data)
-    v = functions.random_velocities(N)
-    v = functions.remove_linear_momentum(v)
-    return functions.rescale(v, T0)
+	p0 = functions.random_momenta(N)
+	p = functions.remove_linear_momentum(p0)
+	v = np.array([p[i]/data[i][3] for i in range(len(data))])
+	return functions.rescale(v, T0)
 
 def dynamics(atoms, x0, v0, dt, t_max, filename="trajectory.xyz"):
     """Integrate equations of motion.
@@ -311,11 +320,23 @@ def dynamics(atoms, x0, v0, dt, t_max, filename="trajectory.xyz"):
 #=============================================================================================================
 
 if __name__ == "__main__":
+
     #------------------------------------------------------------
     #--------------------- Initialization -----------------------
     #------------------------------------------------------------
 
 	data = initialize_positions()
+
+	import argparse
+	parser = argparse.ArgumentParser()
+	parser.add_argument('-N', help="number of benzene")
+	args = parser.parse_args()
+    #------------------------------------------------------------
+    #--------------------- Initialization -----------------------
+    #------------------------------------------------------------
+	os.system('python positions.py --Nmolecules {0}'.format(int(args.N)))
+	data = import_data()
+	positions = initialize_positions(data)
 	v_0 = initial_velocities(atoms, temp_0[sim_n])
 
     #------------------------------------------------------------
