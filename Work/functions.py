@@ -53,7 +53,7 @@ def instantaneous_temperature(vels, masses):
     Nf = 3*N - 6
     return np.sum(vels**2, axis=1) * masses / kB*Nf
 
-def kinetic_temperature(vels, masses):
+def kinetic_temperature(vels):
     """
     Calculates the kinetic temperature of the molecule
     --------------------------------------------------
