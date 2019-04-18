@@ -88,7 +88,7 @@ def import_data():
 	        i+=1
 	return a
 
-def initialize_positions():
+def initialize_positions(data):
 	return np.array([data[i][4] for i in range(len(data))])
 
 def initial_velocities(data, T0):
@@ -200,6 +200,7 @@ def dynamics(atoms, x0, v0, dt, t_max, filename="trajectory.xyz"):
     """
     nsteps = int(t_max/dt)
     time = dt * np.arange(nsteps)
+	N = len(x0)
 
     # Initial positions for every particle for t = 0
     r = np.zeros((nsteps, N, 3))
@@ -288,15 +289,37 @@ def dynamics(atoms, x0, v0, dt, t_max, filename="trajectory.xyz"):
 if __name__ == "__main__":
 	import argparse
 	parser = argparse.ArgumentParser()
-	parser.add_argument('-N', help="number of benzene")
+	parser.add_argument('--Nmol', help="number of benzene")
+	parser.add_argument('--Nsteps', help="number of steps")
+	parser.add_argument('--dt', help="time step")
+	parser.add_argument('-t', help="total time")
 	args = parser.parse_args()
     #------------------------------------------------------------
     #--------------------- Initialization -----------------------
     #------------------------------------------------------------
+
+	if args.t and args.dt and args.Nsteps
+		raise ValueError('Choose 2: dt, t, Nsteps')
+
+	if not args.t:
+		dt = float(args.dt)
+		Nsteps = int(args.Nsteps)
+		t = dt*Nsteps
+
+	if not args.dt:
+		t = float(args.t)
+		Nsteps = int(args.Nsteps)
+		dt = t/Nsteps
+
+	if not args.Nsteps:
+		dt = float(args.dt)
+		t = float(args.t)
+		Nsteps = t/dt
+
 	os.system('python positions.py --Nmolecules {0}'.format(int(args.N)))
 	data = import_data()
 	positions = initialize_positions(data)
-	v_0 = initial_velocities(atoms, temp_0[sim_n])
+	v_0 = initial_velocities(data, temp_0[sim_n])
 
     #------------------------------------------------------------
     #-------------------------- MD ------------------------------
@@ -314,7 +337,7 @@ if __name__ == "__main__":
 	print("………….`|: |: : : : : : : : -,„_„„-~~~--~~--„_: : : : |")
 	print("…………..|: |: : : : : : : : : : : :--------~: : : : : |")
 	print("You've been visited by the propane god, I tell you hwat. Don't 'alt-tab' out of here or Hank Hill will bring the pro pain.")
-	print("Generating data files bfor", N, "atoms in simulation number", sim_n)
+	print("Generating data files bfor", len(data), "atoms in simulation number", sim_n)
 	start = time.time()                                             # Initial time stamp
 	results = dynamics(atoms, x_0, v_0, delta_t[sim_n], t_maximum[sim_n], filename="trajectory.xyz")
 	end = time.time()                                               # Final time stamp
