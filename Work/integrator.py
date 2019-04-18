@@ -69,67 +69,67 @@ Bonds =
         'NN' : [12, 5, 8, 3], 
         'NNN' : [9, 4, 11],
         'NNNN' : [10]
-        }
+        },
 2 :     {
         'N' : [8, 1, 3],
         'NN' : [7, 6, 9, 4], 
         'NNN' : [10, 5, 12],
         'NNNN' : [11]
-        }
+        },
 3 :     {
         'N' : [9, 2, 4],
         'NN' : [8, 1, 10, 5], 
         'NNN' : [11, 6, 7],
         'NNNN' : [12]
-        }
+        },
 4 :     {
         'N' : [10, 3, 5],
         'NN' : [9, 2, 11, 6], 
         'NNN' : [12, 1, 8],
         'NNNN' : [7]
-        }
+        },
 5 :     {
         'N' : [11, 4, 6],
         'NN' : [10, 3, 12, 1], 
         'NNN' : [7, 2, 9],
         'NNNN' : [8]
-        }
+        },
 6 :     {
         'N' : [12, 5, 1],
         'NN' : [11, 4, 7, 2], 
         'NNN' : [8, 3, 10],
         'NNNN' : [9]
-        }
+        },
 7 :     {
         'N' : [1],
         'NN' : [2, 6], 
         'NNN' : [8, 3, 12, 5],
         'NNNN' : [9, 4, 11]
-        }
+        },
 8 :     {
         'N' : [2],
         'NN' : [3, 1], 
         'NNN' : [9, 4, 7, 6],
         'NNNN' : [10, 5, 12]
-        }
+        },
 9 :     {
         'N' : [3],
         'NN' : [4, 2], 
         'NNN' : [10, 5, 8, 1],
         'NNNN' : [11, 6, 7]
-        }
+        },
 10 :    {
         'N' : [4],
         'NN' : [5, 3], 
         'NNN' : [11, 6, 9, 2],
         'NNNN' : [12, 1, 8]
-        }
+        },
 11 :    {
         'N' : [5],
         'NN' : [6, 4], 
         'NNN' : [12, 1, 10, 3],
         'NNNN' : [7, 2, 9]
-        }
+        },
 12 :    {
         'N' : [6],
         'NN' : [1, 5], 
@@ -137,6 +137,23 @@ Bonds =
         'NNNN' : [8, 3, 10]
         }
 }
+
+def gib_me_neighbs(atom, neighb_type='N'):
+    """
+    Function that gibs me them neighbs
+    
+    Parameters
+    ----------
+    atom : integer
+        atom index number
+    neighb_type : string
+        Desired type of relationship between atoms
+
+    Returns
+    -------
+    'dem neighbs 
+    """
+    return (atom//12+1)*np.array(Bonds[atom % 12][neighb_type])
 
 
 
