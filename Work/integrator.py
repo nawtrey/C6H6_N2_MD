@@ -62,8 +62,7 @@ t_maximum  = { 1 : 10,
 
 # Dict of Dict
 
-Bonds = 
-{
+Bonds = {
 1 :     {
         'N' : [7, 6, 2],
         'NN' : [12, 5, 8, 3], 
@@ -153,7 +152,7 @@ def gib_me_neighbs(atom, neighb_type='N'):
     -------
     'dem neighbs 
     """
-    return (atom//12+1)*np.array(Bonds[atom % 12][neighb_type])
+    return (atom // 12)*Bonds[atom % 12][neighb_type]
 
 
 
@@ -166,9 +165,9 @@ def gib_me_neighbs(atom, neighb_type='N'):
 
 def import_data():
 	with open('Data.txt' ,'r') as f:
-	    dtype = np.dtype([('molN',np.float32),('atomN',np.float32),('type',str,
-	(1)),('mass',np.float32),('positions',np.float32,(3)),('connections',np.flo
-	at32,(3))])
+	    dtype = np.dtype([('molN',np.float32),('atomN',np.float32),('type',str,(1)),
+						  ('mass',np.float32),('positions',np.float32,(3)),
+						  ('connections',np.float32,(3))])
 	    ncols = sum(1 for _ in f)
 	    a = np.empty(ncols,dtype=dtype)
 	with open('Data.txt' ,'r') as g:
@@ -249,15 +248,15 @@ def dynamics(data, x0, v0, dt, t_max, filename="trajectory.xyz"):
     """
     nsteps = int(t_max/dt)
     time = dt * np.arange(nsteps)
-	N = len(x0)
+    N = len(x0)
 
     # Initial positions for every particle for t = 0
     r = np.zeros((nsteps, N, 3))
-	r[0] = x0
+    r[0] = x0
 
     # Initial velocities for every particle for t = 0
     v = np.zeros((nsteps, N, 3))
-	v[0] = v0
+    v[0] = v0
 
     # Array of all initial radii for all time steps
     r_ij = np.zeros((N, N, 3))
@@ -338,9 +337,6 @@ if __name__ == "__main__":
     #------------------------------------------------------------
     #--------------------- Initialization -----------------------
     #------------------------------------------------------------
-
-	data = initialize_positions()
-
 	import argparse
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--Nmol', help="number of benzene")
@@ -352,7 +348,7 @@ if __name__ == "__main__":
     #--------------------- Initialization -----------------------
     #------------------------------------------------------------
 
-	if args.t and args.dt and args.Nsteps
+	if args.t and args.dt and args.Nsteps:
 		raise ValueError('Choose 2: dt, t, Nsteps')
 
 	if not args.t:
@@ -370,7 +366,7 @@ if __name__ == "__main__":
 		t = float(args.t)
 		Nsteps = t/dt
 
-	os.system('python positions.py --Nmolecules {0}'.format(int(args.N)))
+	os.system('python positions.py --Nmolecules {0}'.format(int(args.Nmol)))
 	data = import_data()
 	positions = initialize_positions(data)
 	v_0 = initial_velocities(data, temp_0[sim_n])
