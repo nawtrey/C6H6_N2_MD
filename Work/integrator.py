@@ -154,7 +154,12 @@ def gib_me_neighbs(atomnum, neighb_type='N'):
     -------
     'dem neighbs 
     """
-    return (1+(atomnum-1)//12)*Bonds[atomnum%13+atomnum//13][neighb_type]
+    if atomnum%12==0:
+        num = 12
+    else:
+        num = atomnum%12
+    b = Bonds[num][neighb_type]
+    return [((atomnum-1)//12)*12+i for i in b]
 
 # Nonbonds = {}
 
