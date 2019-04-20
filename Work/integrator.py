@@ -60,6 +60,8 @@ t_maximum  = { 1 : 10,
                5 : 2
 }
 
+cutoff = 0.5
+
 # Dict of Dict
 
 Bonds = {
@@ -137,7 +139,7 @@ Bonds = {
         }
 }
 
-def gib_me_neighbs(atom, neighb_type='N'):
+def gib_me_neighbs(atomnum, neighb_type='N'):
     """
     Function that gibs me them neighbs
     
@@ -152,10 +154,7 @@ def gib_me_neighbs(atom, neighb_type='N'):
     -------
     'dem neighbs 
     """
-    return (atom // 12)*Bonds[atom % 12][neighb_type]
-
-
-
+    return (1+(atomnum-1)//12)*Bonds[atomnum%13+atomnum//13][neighb_type]
 
 # Nonbonds = {}
 
@@ -258,12 +257,15 @@ def dynamics(data, x0, v0, dt, t_max, filename="trajectory.xyz"):
     v = np.zeros((nsteps, N, 3))
     v[0] = v0
 
-    # Array of all initial radii for all time steps
-    r_ij = np.zeros((N, N, 3))
-    for i in range(0, N):
-        for j in range(0, i):
-            r_ij[i, j] = r[0, j] - r[0, i]
-            r_ij[j, i] = -r_ij[i, j]
+    # Array of all initial distances 
+    r_0 = np.zeros((N, N))
+    r_0 = dist.cdist(x_0,x_0)
+    rc = functions.cutoff_r(r_0,cutoff)
+    ####putting this on hold for mow
+    #for i in range(0, N):
+    #    for j in range(0, i):
+    #        r_ij[i, j] = r[0, j] - r[0, i]
+    #        r_ij[j, i] = -r_ij[i, j]
 
     #============= Force Calculations ==============
 
@@ -368,7 +370,7 @@ if __name__ == "__main__":
 
 	os.system('python positions.py --Nmolecules {0}'.format(int(args.Nmol)))
 	data = import_data()
-	positions = initialize_positions(data)
+	x_0 = initialize_positions(data)
 	v_0 = initial_velocities(data, temp_0[sim_n])
 
     #------------------------------------------------------------
@@ -389,7 +391,7 @@ if __name__ == "__main__":
 	print("You've been visited by the propane god, I tell you hwat. Don't 'alt-tab' out of here or Hank Hill will bring the pro pain.")
 	print("Generating data files bfor", len(data), "atoms in simulation number", sim_n)
 	start = time.time()                                             # Initial time stamp
-	results = dynamics(atoms, x_0, v_0, delta_t[sim_n], t_maximum[sim_n], filename="trajectory.xyz")
+	results = dynamics(data, x_0, v_0, delta_t[sim_n], t_maximum[sim_n], filename="trajectory.xyz")
 	end = time.time()                                               # Final time stamp
 	total_time = end - start                                        # Calculates difference of time stamps
 	timeperatom = total_time/N                                      # Calculates run time of integrator per atom
