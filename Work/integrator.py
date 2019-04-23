@@ -60,10 +60,11 @@ t_maximum  = { 1 : 10,
                5 : 2
 }
 
+cutoff = 0.5
+
 # Dict of Dict
 
-Bonds = 
-{
+Bonds = {
 1 :     {
         'N' : [7, 6, 2],
         'NN' : [12, 5, 8, 3], 
@@ -138,7 +139,7 @@ Bonds =
         }
 }
 
-def gib_me_neighbs(atom, neighb_type='N'):
+def gib_me_neighbs(atomnum, neighb_type='N'):
     """
     Function that gibs me them neighbs
     
@@ -153,7 +154,15 @@ def gib_me_neighbs(atom, neighb_type='N'):
     -------
     'dem neighbs 
     """
-    return (atom//12+1)*np.array(Bonds[atom % 12][neighb_type])
+    if atomnum%12==0:
+        num = 12
+    else:
+        num = atomnum%12
+    b = Bonds[num][neighb_type]
+    return [((atomnum-1)//12)*12+i for i in b]
+
+# Nonbonds = {}
+
 
 #=============================================================================================================
 #============================================ Integrator =====================================================
@@ -161,9 +170,9 @@ def gib_me_neighbs(atom, neighb_type='N'):
 
 def import_data():
 	with open('Data.txt' ,'r') as f:
-	    dtype = np.dtype([('molN',np.float32),('atomN',np.float32),('type',str,
-	(1)),('mass',np.float32),('positions',np.float32,(3)),('connections',np.flo
-	at32,(3))])
+	    dtype = np.dtype([('molN',np.float32),('atomN',np.float32),('type',str,(1)),
+						  ('mass',np.float32),('positions',np.float32,(3)),
+						  ('connections',np.float32,(3))])
 	    ncols = sum(1 for _ in f)
 	    a = np.empty(ncols,dtype=dtype)
 	with open('Data.txt' ,'r') as g:
@@ -212,7 +221,7 @@ def initial_velocities(data, T0):
 	v = np.array([p[i]/data[i][3] for i in range(len(data))])
 	return functions.rescale(v, T0)
 
-def dynamics(atoms, x0, v0, dt, t_max, filename="trajectory.xyz"):
+def dynamics(data, x0, v0, dt, t_max, filename="trajectory.xyz"):
     """Integrate equations of motion.
 
     Parameters
@@ -244,24 +253,25 @@ def dynamics(atoms, x0, v0, dt, t_max, filename="trajectory.xyz"):
     """
     nsteps = int(t_max/dt)
     time = dt * np.arange(nsteps)
-	N = len(x0)
+    N = len(x0)
 
     # Initial positions for every particle for t = 0
     r = np.zeros((nsteps, N, 3))
-    for i in range(0, N):
-        r[0, i] = x0[i]        # N x 3 array
+    r[0] = x0
 
     # Initial velocities for every particle for t = 0
     v = np.zeros((nsteps, N, 3))
-    for i in range(0, N):
-        v[0, i] = v0[i]     # nstep x N x 3 array
+    v[0] = v0
 
-    # Array of all initial radii for all time steps
-    r_ij = np.zeros((N, N, 3))
-    for i in range(0, N):
-        for j in range(0, i):
-            r_ij[i, j] = r[0, j] - r[0, i]
-            r_ij[j, i] = -r_ij[i, j]
+    # Array of all initial distances 
+    r_0 = np.zeros((N, N))
+    r_0 = dist.cdist(x_0,x_0)
+    rc = functions.cutoff_r(r_0,cutoff)
+    ####putting this on hold for mow
+    #for i in range(0, N):
+    #    for j in range(0, i):
+    #        r_ij[i, j] = r[0, j] - r[0, i]
+    #        r_ij[j, i] = -r_ij[i, j]
 
     #============= Force Calculations ==============
 
@@ -335,9 +345,6 @@ if __name__ == "__main__":
     #------------------------------------------------------------
     #--------------------- Initialization -----------------------
     #------------------------------------------------------------
-
-	data = initialize_positions()
-
 	import argparse
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--Nmol', help="number of benzene")
@@ -350,7 +357,7 @@ if __name__ == "__main__":
     #------------------------------------------------------------
     #------------------------------------------------------------
 
-	if args.t and args.dt and args.Nsteps
+	if args.t and args.dt and args.Nsteps:
 		raise ValueError('Choose 2: dt, t, Nsteps')
 
 	if not args.t:
@@ -368,9 +375,9 @@ if __name__ == "__main__":
 		t = float(args.t)
 		Nsteps = t/dt
 
-	os.system('python positions.py --Nmolecules {0}'.format(int(args.N)))
+	os.system('python positions.py --Nmolecules {0}'.format(int(args.Nmol)))
 	data = import_data()
-	positions = initialize_positions(data)
+	x_0 = initialize_positions(data)
 	v_0 = initial_velocities(data, temp_0[sim_n])
 
     #------------------------------------------------------------
@@ -392,7 +399,7 @@ if __name__ == "__main__":
 	print("You've been visited by the propane god, I tell you hwat. Don't 'alt-tab' out of here or Hank Hill will bring the pro pain.")
 	print("Generating data files bfor", len(data), "atoms in simulation number", sim_n)
 	start = time.time()                                             # Initial time stamp
-	results = dynamics(atoms, x_0, v_0, delta_t[sim_n], t_maximum[sim_n], filename="trajectory.xyz")
+	results = dynamics(data, x_0, v_0, delta_t[sim_n], t_maximum[sim_n], filename="trajectory.xyz")
 	end = time.time()                                               # Final time stamp
 	total_time = end - start                                        # Calculates difference of time stamps
 	timeperatom = total_time/N                                      # Calculates run time of integrator per atom
