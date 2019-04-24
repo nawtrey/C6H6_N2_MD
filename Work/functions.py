@@ -215,5 +215,29 @@ def V_M(D_e, r, r_e, k_e):
     -------
     Potential Energy : float
     """
+    r_mag = np.sqrt(np.sum(r*r))
+    r2 = r_mag - r_e
     beta = np.sqrt(k_e/2*D_e)
-    return D_e*(1-e**(-(beta*(positions-r_e))))**2
+    return D_e*(1-np.exp(-beta*r2))**2
+
+def F_M(D_e, r, r_e, k_e):
+    """
+    Calculates the potential energy due to the Morse potential
+    between a pair of atoms for a single time step
+
+    Parameters
+    ----------
+    D_e     : well depth
+    r       : distance between atoms
+    r_e     : equilibrium bond distance
+    beta    : controls 'width' of the potential
+    k_e     : force constant at the minimum of the well
+
+    Returns
+    -------
+    Potential Energy : float
+    """
+    r_mag = np.sqrt(np.sum(r*r))
+    r2 = r_mag - r_e
+    beta = np.sqrt(k_e/2*D_e)
+    return 2*beta*D_e*(np.exp(-2*beta*r2) - np.exp(-beta*r2))

@@ -120,7 +120,7 @@ if __name__ == "__main__":												# do this stuff when script is executed
 				alist.append(int(Ccon_permol[i,j,k]))
 			connections.append(alist)
 		for l in range(6):
-			connections.append(Hcon_permol[i][l])
+			connections.append(int(Hcon_permol[i][l]))
 			
 
 	info = list(zip(mol_num, atomnumber, atomname, atommass, a, connections)) 			# Takes all data and puts in single list where each index corresponds to a specific atom

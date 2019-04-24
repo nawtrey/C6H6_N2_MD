@@ -139,6 +139,12 @@ Bonds = {
         }
 }
 
+def get_base_atom_num(atomnum):
+    return ((atomnum - 1) % 12) + 1 
+
+def get_mol_num(atomnum):
+    return ((atomnum-1)//12) + 1
+
 def gib_me_neighbs(atomnum, neighb_type='N'):
     """
     Function that gibs me them neighbs
@@ -154,15 +160,10 @@ def gib_me_neighbs(atomnum, neighb_type='N'):
     -------
     'dem neighbs 
     """
-    if atomnum%12==0:
-        num = 12
-    else:
-        num = atomnum%12
-    b = Bonds[num][neighb_type]
+    b = Bonds[get_base_atom_num(atomnum)][neighb_type]
     return [((atomnum-1)//12)*12+i for i in b]
 
 # Nonbonds = {}
-
 
 #=============================================================================================================
 #============================================ Integrator =====================================================
