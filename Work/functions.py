@@ -35,7 +35,7 @@ def random_momenta(N):
 def instantaneous_temperature(vels, masses):
     """
     Calculates the instantaneous temperature of the system for a single time step
-    
+
     Parameters
     ----------
     vels : array
@@ -140,7 +140,7 @@ def total_momentum(vels, masses):
 def KE(vels, masses):
     """
     Calculates the kinetic energy of a single particle for a single time step
-    
+
     Parameters
     ----------
     vels : array
@@ -176,9 +176,21 @@ def F_LJ(r):
         rhat = r/r_mag                  # r_vector unit vector calculation
         return 24*(2*r_mag**-13 - r_mag**-7)*rhat
 
+def F_M(D_e, r, r_e, k_e):
+    """
+    Morse force vectors
+
+    Paramaters
+    ----------
+    """
+    beta = np.sqrt(k_e/2*D_e)
+    r_mag = np.sqrt(np.sum(positions*positions))
+    r = r_mag - r_e
+    return 2*D_e*beta*(np.exp(-beta*r)-np.exp(-2*beta*r))
+
 def V_LJ(positions):
     """
-    Calculates the potential energy due to the LJ potential 
+    Calculates the potential energy due to the LJ potential
     between a pair of atoms for a single time step
 
     Parameters
@@ -241,3 +253,4 @@ def F_M(D_e, r, r_e, k_e):
     r2 = r_mag - r_e
     beta = np.sqrt(k_e/2*D_e)
     return 2*beta*D_e*(np.exp(-2*beta*r2) - np.exp(-beta*r2))
+
