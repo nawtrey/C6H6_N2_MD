@@ -156,29 +156,13 @@ def KE(vels, masses):
 
 def F_LJ(r):
     """
-    Lennard-Jones force vector
-
-    Parameters
-    ----------
-    r : array
-        (1x3) array of r vector (rx, ry, rz)
-
-    Returns
-    -------
-    Force : array
-        Returns force as (1x3) array --> (F_x1, F_y1, F_z1)
+    Lennard-Jones force magnitude
     """
-    rr = np.sum(r*r)                    # Calculates the dot product of r_vector with itself
-    r_mag = np.sqrt(rr)                 # Calculates the magnitude of the r_vector
-    if r_mag == 0.0:
-        return np.zeros((3))
-    else:
-        rhat = r/r_mag                  # r_vector unit vector calculation
-        return 24*(2*r_mag**-13 - r_mag**-7)*rhat
+    return 4*eps*(6/r*(sigma/r)**12 - 12/r*(sigma/r)**6)
 
 def F_M(D_e, r, r_e, k_e):
     """
-    Morse force vectors
+    Morse force magnitude
 
     Paramaters
     ----------
@@ -263,4 +247,5 @@ def F_M(D_e, r, r_e, k_e):
     beta = np.sqrt(k_e/2*D_e)
     return 2*beta*D_e*(np.exp(-2*beta*r2) - np.exp(-beta*r2))
 
->>>>>>> 640da61f40ec95cc67caaceb2d2109ffc6ea15fd
+def force():
+	

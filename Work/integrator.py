@@ -252,43 +252,34 @@ def dynamics(data, x0, v0, dt, t_max, filename="trajectory.xyz"):
     Position : array
     Velocity : array
     """
-    nsteps = int(t_max/dt)
-    time = dt * np.arange(nsteps)
-    N = len(x0)
+	nsteps = int(t_max/dt)
+	time = dt * np.arange(nsteps)
+	N = len(x0)
 
-    # Initial positions for every particle for t = 0
-    r = np.zeros((nsteps, N, 3))
-    r[0] = x0
+	# Initial positions for every particle for t = 0
+	r = np.zeros((nsteps, N, 3))
+	r[0] = x0
 
-    # Initial velocities for every particle for t = 0
-    v = np.zeros((nsteps, N, 3))
-    v[0] = v0
+	# Initial velocities for every particle for t = 0
+	v = np.zeros((nsteps, N, 3))
+	v[0] = v0
 
-    # Array of all initial distances 
-    r_0 = np.zeros((N, N))
-    r_0 = dist.cdist(x_0,x_0)
-    rc = functions.cutoff_r(r_0,cutoff)
-    ####putting this on hold for mow
-    #for i in range(0, N):
-    #    for j in range(0, i):
-    #        r_ij[i, j] = r[0, j] - r[0, i]
-    #        r_ij[j, i] = -r_ij[i, j]
+	# Array of all initial distances 
+	r_0 = np.zeros((N, N))
+	r_0 = dist.cdist(x_0,x_0)
+	rc = functions.cutoff_r(r_0,cutoff)
+	indices = np.transpose(np.nonzero(rc))+1
 
     #============= Force Calculations ==============
 
-    #- - - - Forces between particles - - - -
-
-    # Array of all initial force calculations for initial radii r_ij
-    f_ij = np.zeros((N, N, 3))
-    for i in range(0, N):
-        for j in range(0, i):
-            f_ij[i, j] = functions.F_LJ(r_ij[i, j])
-            f_ij[j, i] = -f_ij[i, j]
-
-    #- - - - Total Force on each particle - - - -
-
-    # N x 3 array of all initial net forces from all j atoms acting on atom i
-    f_tot = f_ij.sum(axis=1)
+	dir_F = np.zeros((N, N, 3))
+	mag_F = np.zeros((N,N))
+	for i in indices:
+		mag_F[i[0],i[1]] = functions.F_LJ(rc[i[0],i[1]])
+		mag_F[i[1],i[0]] = mag_F[i[0],i[1]]
+		dir_F[i[0],i[1]] = x_0[i[0]]-x_0[i[0]]
+		dir_F[i[1],i[0]] = -dir_F[i[0],i[1]]
+	
 
     #============= Velocity Verlet ===============================================
     for t in tqdm.tqdm(range(0, nsteps-1)):
