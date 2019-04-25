@@ -217,3 +217,12 @@ def V_M(D_e, r, r_e, k_e):
     """
     beta = np.sqrt(k_e/2*D_e)
     return D_e*(1-e**(-(beta*(positions-r_e))))**2
+
+def cutoff_r(pos_array,cutoff):
+	for i in range(len(pos_array)):
+		for j in range(len(pos_array[0])):
+			if pos_array[i,j]<cutoff:
+				pos_array[i,j]=0
+
+def F_dihedr():
+	
