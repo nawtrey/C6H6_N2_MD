@@ -105,37 +105,43 @@ Bonds = {
         'N' : [1],
         'NN' : [2, 6], 
         'NNN' : [8, 3, 12, 5],
-        'NNNN' : [9, 4, 11]
+        'NNNN' : [9, 4, 11],
+		'NNNNN' : [10]
         },
 8 :     {
         'N' : [2],
         'NN' : [3, 1], 
         'NNN' : [9, 4, 7, 6],
-        'NNNN' : [10, 5, 12]
+        'NNNN' : [10, 5, 12],
+		'NNNNN' : [11]
         },
 9 :     {
         'N' : [3],
         'NN' : [4, 2], 
         'NNN' : [10, 5, 8, 1],
-        'NNNN' : [11, 6, 7]
+        'NNNN' : [11, 6, 7],
+		'NNNNN' : [12]
         },
 10 :    {
         'N' : [4],
         'NN' : [5, 3], 
         'NNN' : [11, 6, 9, 2],
-        'NNNN' : [12, 1, 8]
+        'NNNN' : [12, 1, 8],
+		'NNNNN' : [7]
         },
 11 :    {
         'N' : [5],
         'NN' : [6, 4], 
         'NNN' : [12, 1, 10, 3],
-        'NNNN' : [7, 2, 9]
+        'NNNN' : [7, 2, 9],
+		'NNNNN' : [8]
         },
 12 :    {
         'N' : [6],
         'NN' : [1, 5], 
         'NNN' : [7, 2, 11, 4],
-        'NNNN' : [8, 3, 10]
+        'NNNN' : [8, 3, 10],
+		'NNNNN' : [9]
         }
 }
 
@@ -222,49 +228,7 @@ def initial_velocities(data, T0):
 	v = np.array([p[i]/data[i][3] for i in range(len(data))])
 	return functions.rescale(v, T0)
 
-def dynamics(data, x0, v0, dt, t_max, filename="trajectory.xyz"):
-    """Integrate equations of motion.
-
-    Parameters
-    ----------
-     atoms : list
-         list of atom names
-     x0 : array
-         Nx3 array containing the starting coordinates of the atoms.
-         (Note that x0 is changed and at the end of the run will
-         contain the last coordinates.)
-     v0 : array
-         Nx3 array containing the starting velocities, eg np.zeros((N,3))
-         or velocities that generate a given temperature
-     dt : float
-         integration timestep
-     nsteps : int, optional
-         number of integrator time steps
-     filename : string
-         filename of trajectory output in xyz format
-
-    Writes coordinates to file `filename`.
-
-    Returns
-    -------
-
-    Time : array
-    Position : array
-    Velocity : array
-    """
-	nsteps = int(t_max/dt)
-	time = dt * np.arange(nsteps)
-	N = len(x0)
-
-	# Initial positions for every particle for t = 0
-	r = np.zeros((nsteps, N, 3))
-	r[0] = x0
-
-	# Initial velocities for every particle for t = 0
-	v = np.zeros((nsteps, N, 3))
-	v[0] = v0
-
-	# Array of all initial distances 
+def F_inter():
 	r_0 = np.zeros((N, N))
 	r_0 = dist.cdist(x_0,x_0)
 	rc = functions.cutoff_r(r_0,cutoff)
@@ -279,53 +243,102 @@ def dynamics(data, x0, v0, dt, t_max, filename="trajectory.xyz"):
 		mag_F[i[1],i[0]] = mag_F[i[0],i[1]]
 		dir_F[i[0],i[1]] = x_0[i[0]]-x_0[i[0]]
 		dir_F[i[1],i[0]] = -dir_F[i[0],i[1]]
-	
+
+	F = [[dir_F[i,j]*mag_F[i,j] for j in range(len(dir_F[0]))] 
+								for j in range(len(dir_F))]
+	return F
+
+def F_intra():
+	return
+
+def dynamics(data, x0, v0, dt, t_max, filename="trajectory.xyz"):
+	"""Integrate equations of motion.
+
+	Parameters
+	----------
+	atoms : list
+		list of atom names
+	x0 : array
+		Nx3 array containing the starting coordinates of the atoms.
+	v0 : array
+		Nx3 array containing the starting velocities, 
+		eg np.zeros((N,3)) or velocities that generate 
+		a given temperature
+	dt : float
+		integration timestep
+	nsteps : int, optional
+		number of integrator time steps
+	filename : string
+		filename of trajectory output in xyz format
+
+	Writes coordinates to file `filename`.
+
+	Returns
+	-------
+
+	Time : array
+	Position : array
+	Velocity : array
+	"""
+	nsteps = int(t_max/dt)
+	time = dt * np.arange(nsteps)
+	N = len(x0)
+
+	# Initial positions for every particle for t = 0
+	r = np.zeros((nsteps, N, 3))
+	r[0] = x0
+
+	# Initial velocities for every particle for t = 0
+	v = np.zeros((nsteps, N, 3))
+	v[0] = v0
+
+	# Array of all initial distances 
 
     #============= Velocity Verlet ===============================================
-    for t in tqdm.tqdm(range(0, nsteps-1)):
-        vhalf = np.zeros((nsteps, 3))
-        for j in range(0, N):
-            vhalf[j] = v[t, j] + .5*dt*f_tot[j]
-            r[t+1, j] = r[t, j] + dt*vhalf[j]
+	for t in tqdm.tqdm(range(0, nsteps-1)):
+		vhalf = np.zeros((nsteps, 3))
+		for j in range(0, N):
+			vhalf[j] = v[t, j] + .5*dt*f_tot[j]
+			r[t+1, j] = r[t, j] + dt*vhalf[j]
 
-        r_ijdt = np.zeros((N, N, 3))
-        for i in range(0, N):
-            for j in range(0, i):
-                r_ijdt[i, j] = r[t+1, j] - r[t+1, i]
-                r_ijdt[j, i] = -r_ijdt[i, j]
+		r_ijdt = np.zeros((N, N, 3))
+		for i in range(0, N):
+			for j in range(0, i):
+				r_ijdt[i, j] = r[t+1, j] - r[t+1, i]
+				r_ijdt[j, i] = -r_ijdt[i, j]
 
         # Now that we have r_ij after time dt, we can calculate the new forces after time dt:
-        f_ijdt = np.zeros((N, N, 3))
-        for i in range(0, N):
-            for j in range(0, i):
-                f_ijdt[i, j] = functions.F_LJ(r_ijdt[i, j])
-                f_ijdt[j, i] = -f_ijdt[i, j]
+		f_ijdt = np.zeros((N, N, 3))
+		for i in range(0, N):
+			for j in range(0, i):
+				f_ijdt[i, j] = functions.F_LJ(r_ijdt[i, j])
+				f_ijdt[j, i] = -f_ijdt[i, j]
 
         # Now that we have all individual j forces acting on particle i after
         # time dt, we need to sum those forces to find the net force:
-        f_totdt = f_ijdt.sum(axis=1)
+		f_totdt = f_ijdt.sum(axis=1)
 
         # Now we can calculate the new velocities based on the new forces:
-        for j in range(0, N):
-            v[t+1, j] = vhalf[j] +.5*dt*f_totdt[j]
+		for j in range(0, N):
+			v[t+1, j] = vhalf[j] +.5*dt*f_totdt[j]
 
         # New forces become old forces
-        for j in range(0, N):
-            f_tot[j] = f_totdt[j]
+		for j in range(0, N):
+			f_tot[j] = f_totdt[j]
     #===========================================================================
 
 
     #============ Write to .xyz file ==========================================
-    if filename:
-        with open('trajectory.xyz', 'w') as xyzfile:
-            for i in range(0, nsteps):
-                IO.write_xyz_frame(xyzfile, atoms, r[i], i, "simulation")     # Writes all (x, y, z) data to file
 
-    if filename:
-        with open('velocities.xyz', 'w') as xyzfile:
-            for i in range(0, nsteps):
-                IO.write_xyz_frame(xyzfile, atoms, v[i], i, "simulation")     # Writes all (v_x, v_y, v_z) data to file
-    return time, r, v
+	with open('trajectory.xyz', 'w') as xyzfile:
+		for i in range(0, nsteps):
+			IO.write_xyz_frame(xyzfile, atoms, r[i], i, "simulation")     # Writes all (x, y, z) data to file
+
+	if filename:
+		with open('velocities.xyz', 'w') as xyzfile:
+			for i in range(0, nsteps):
+				IO.write_xyz_frame(xyzfile, atoms, v[i], i, "simulation")     # Writes all (v_x, v_y, v_z) data to file
+	return time, r, v
 
 
 #=============================================================================================================

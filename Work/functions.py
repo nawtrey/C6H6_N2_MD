@@ -223,7 +223,7 @@ def cutoff_r(pos_array,cutoff):
 				pos_array[i,j]=0
 
 def F_dihedr():
-	
+	return	
 
 def F_M(D_e, r, r_e, k_e):
     """
@@ -248,4 +248,4 @@ def F_M(D_e, r, r_e, k_e):
     return 2*beta*D_e*(np.exp(-2*beta*r2) - np.exp(-beta*r2))
 
 def force():
-	
+	return
