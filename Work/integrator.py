@@ -228,10 +228,8 @@ def initial_velocities(data, T0):
 	v = np.array([p[i]/data[i][3] for i in range(len(data))])
 	return functions.rescale(v, T0)
 
-def F_inter():
-	r_0 = np.zeros((N, N))
-	r_0 = dist.cdist(x_0,x_0)
-	rc = functions.cutoff_r(r_0,cutoff)
+def F_inter(dist_arr,):
+	rc = functions.cutoff_r(dist_arr,cutoff)
 	indices = np.transpose(np.nonzero(rc))+1
 
     #============= Force Calculations ==============
@@ -245,11 +243,32 @@ def F_inter():
 		dir_F[i[1],i[0]] = -dir_F[i[0],i[1]]
 
 	F = [[dir_F[i,j]*mag_F[i,j] for j in range(len(dir_F[0]))] 
-								for j in range(len(dir_F))]
+			    	    for j in range(len(dir_F))]
 	return F
 
-def F_intra():
-	return
+def neighb_array():
+    box = np.zeros((12,12))
+    for i in Bonds:
+            l=1
+            for j in Bonds[i].keys():
+                for k in Bonds[i][j]:
+                    box[i-1,k-1]=l
+                l+=1
+    return box
+
+def F_intra(neighb_array,positions):	
+    for i in range(len(positions)//12):
+        for j in range(len(neighb_array)):
+            for k in range(j):
+                if neighb_array[j,k]==2 or neighb_array[j,k]==3:
+                    continue
+                elif neighb_array[j,k]==1:
+                    fmorse
+                elif neighb_array[j,k]==4:
+                    halflj
+                else:
+                    functions.F_LJ(r)
+    return
 
 def dynamics(data, x0, v0, dt, t_max, filename="trajectory.xyz"):
 	"""Integrate equations of motion.
@@ -281,7 +300,7 @@ def dynamics(data, x0, v0, dt, t_max, filename="trajectory.xyz"):
 	Velocity : array
 	"""
 	nsteps = int(t_max/dt)
-	time = dt * np.arange(nsteps)
+	time = dt*np.arange(nsteps)
 	N = len(x0)
 
 	# Initial positions for every particle for t = 0
@@ -293,11 +312,21 @@ def dynamics(data, x0, v0, dt, t_max, filename="trajectory.xyz"):
 	v[0] = v0
 
 	# Array of all initial distances 
+	r_0 = np.zeros((N, N))
+	r_0 = dist.cdist(x0,x0)
+        vhalf = np.zeros((len(x0), 3))
+        neighbs = neighb_array()
 
-    #============= Velocity Verlet ===============================================
-	for t in tqdm.tqdm(range(0, nsteps-1)):
-		vhalf = np.zeros((nsteps, 3))
-		for j in range(0, N):
+        # Initial force calculations
+        F_intra(neighbs,x0)
+#============= Velocity Verlet ===============================================
+	for t in tqdm.tqdm(range(nsteps)):
+            
+
+
+
+
+            for j in range(0, N):
 			vhalf[j] = v[t, j] + .5*dt*f_tot[j]
 			r[t+1, j] = r[t, j] + dt*vhalf[j]
 
@@ -309,7 +338,7 @@ def dynamics(data, x0, v0, dt, t_max, filename="trajectory.xyz"):
 
         # Now that we have r_ij after time dt, we can calculate the new forces after time dt:
 		f_ijdt = np.zeros((N, N, 3))
-		for i in range(0, N):
+                for i in range(0, N):
 			for j in range(0, i):
 				f_ijdt[i, j] = functions.F_LJ(r_ijdt[i, j])
 				f_ijdt[j, i] = -f_ijdt[i, j]
@@ -424,3 +453,5 @@ if __name__ == "__main__":
 		file.write('\n'.join('{} {}'.format(i[0],i[1]) for i in tuples))    # Writes tuples to rows in file 'integrator.txt'
 
 # p.close()
+
+
