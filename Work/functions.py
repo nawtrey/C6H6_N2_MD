@@ -222,9 +222,6 @@ def cutoff_r(pos_array,cutoff):
 			if pos_array[i,j]<cutoff:
 				pos_array[i,j]=0
 
-def F_dihedr():
-	return	
-
 def F_M(D_e, r, r_e, k_e):
     """
     Calculates the potential energy due to the Morse potential
@@ -247,5 +244,46 @@ def F_M(D_e, r, r_e, k_e):
     beta = np.sqrt(k_e/2*D_e)
     return 2*beta*D_e*(np.exp(-2*beta*r2) - np.exp(-beta*r2))
 
-def force():
-	return
+def DA(positions, i):
+    """
+    Calculates the dihedral angle
+
+    Paramaters
+    ----------
+    positions : array
+        (Nx3) array of positions for every atom in system
+    i : reference atom
+    """
+    r_ij = np.abs(positions[i] - positions[i+1])
+    r_jk = np.abs(positions[i] - positions[i+6])
+    r_lk = np.abs(positions[i+6] - positions[i+12])
+    a = np.cross(r_ij, r_jk)
+    b = np.cross(r_lk, r_jk)
+    costheta = np.dot(a,b) / np.linalg.norm(a*b)
+    theta = np.arccos(costheta)
+    return theta
+
+def V_D(positions, i):
+    """
+    Calculates the Dihedral Potential
+
+    Paramaters
+    ----------
+    positions : array
+        (Nx3) array of positions for every atom in system
+    i : reference atom
+    """
+    theta = DA(positions, i)
+
+    # "Cosine functional form"
+    theta_0 =    # angle where potential passes through its minimum value, reference dihedral angle
+    V_n =      # barrier height, "force constant"
+    n =     # multiplicity, "the number of minima as the bond is rotated through 360deg"
+    V_DA =  (V_n/2) * (1 + np.cos(n*theta - theta_0))  # dihedral angle potential - cosine form]
+
+    # "Harmonic form"
+    phi_0 =   # reference dihedral angle
+    k =   # force constant (different that cosine form force constant)
+    V_DH = k *(theta - phi_0)**2
+
+    return V_DH
