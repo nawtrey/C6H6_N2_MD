@@ -239,17 +239,18 @@ def F_inter(dist_arr,x):
 
     #============= Force Calculations ==============
 
-    dir_F = np.zeros((N, N, 3))
+    dir_F = np.zeros((3,N,N))
     mag_F = np.zeros((N,N))
     for i in indices:
         mag_F[i[0],i[1]] = functions.F_LJ(rc[i[0],i[1]])
         mag_F[i[1],i[0]] = mag_F[i[0],i[1]]
-        dir_F[i[0],i[1]] = x[i[0]]-x[i[0]]
-        dir_F[i[1],i[0]] = -dir_F[i[0],i[1]]
+        dir_F[:,i[0],i[1]] = x[i[0]]-x[i[0]]
+        dir_F[:,i[1],i[0]] = -dir_F[i[0],i[1]]
 
-    F = [[dir_F[i,j]*mag_F[i,j] for j in range(len(dir_F[0]))] 
-                                for j in range(len(dir_F))]
-    return F
+    F = [[dir_F[:,i,j]*mag_F[i,j] for i in range(len(dir_F[0]))] 
+                                  for j in range(len(dir_F[0,0]))]
+    return np.transpose(np.sum(F,axis=2))
+
 
 def neighb_array():
     box = np.zeros((12,12))
@@ -262,20 +263,21 @@ def neighb_array():
     return box
 
 def F_intra(neighb_array,x):
-    forces = np.zeros((len(x),3))
+    forces = np.zeros((3,len(x),len(x)))
     for i in range(len(x)//12):
         for j in range(len(neighb_array)):
             for k in range(j):
                 if neighb_array[j,k]==2 or neighb_array[j,k]==3:
                     continue
                 vec = x[12*i+j]-x[12*i+k]
+                bond = data[12*i+j][2]+data[12*i+k][2]
                 elif neighb_array[j,k]==1:
-                    forces[i*12+j,k] = functions.F_M(r)*vec
+                    forces[:,i*12+j,12*i+k] = functions.F_M(r,bond)*vec
                 elif neighb_array[j,k]==4:
-                    forces[i*12+j,k] = 0.5*functions.F_LJ(r)*vec
+                    forces[:,i*12+j,12*i+k] = 0.5*functions.F_LJ(r)*vec
                 else:
-                    forces[12*i+j,k] = functions.F_LJ(r)*vec
-    return forces
+                    forces[:,12*i+j,12*i+k] = functions.F_LJ(r)*vec
+    return np.transpose(np.sum(forces,axis=2))
 
 def dynamics(data, x0, v0, dt, t_max, filename="trajectory.xyz"):
     """Integrate equations of motion.

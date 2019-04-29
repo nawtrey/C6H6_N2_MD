@@ -170,7 +170,7 @@ def F_M(D_e, r, r_e, k_e):
     beta = np.sqrt(k_e/2*D_e)
     r_mag = np.sqrt(np.sum(positions*positions))
     r = r_mag - r_e
-    return 2*D_e*beta*(np.exp(-beta*r)-np.exp(-2*beta*r))
+    return -2*D_e*beta*(np.exp(-beta*r)-np.exp(-2*beta*r))
 
 def V_LJ(positions):
     """
@@ -194,7 +194,7 @@ def V_LJ(positions):
     else:
         return 4*epsilon*((sigma/r_mag)**12 - (sigma/r_mag**6))
 
-def V_M(D_e, r, r_e, k_e):
+def V_M(r,bond):
     """
     Calculates the potential energy due to the Morse potential
     between a pair of atoms for a single time step
@@ -211,10 +211,16 @@ def V_M(D_e, r, r_e, k_e):
     -------
     Potential Energy : float
     """
-    r_mag = np.sqrt(np.sum(r*r))
-    r2 = r_mag - r_e
-    beta = np.sqrt(k_e/2*D_e)
-    return D_e*(1-e**(-(beta*(positions-r_e))))**2
+    params = {'CC':{'r_e': , 'D_e': ,'k_e': },
+              'CH':{'r_e': , 'D_e': ,'k_e': },
+              'HC':{'r_e': , 'D_e': ,'k_e': }}
+    values = params[bond]
+    k_e = values['k_e']
+    D_e = values['D_e']
+    r_e = values['r_e']
+    r2 = r - r_e
+    beta = np.sqrt(k_e/(2*D_e))
+    return D_e*(1-np.exp(-beta*r2))**2
 
 def cutoff_r(pos_array,cutoff):
 	for i in range(len(pos_array)):
@@ -222,7 +228,7 @@ def cutoff_r(pos_array,cutoff):
 			if pos_array[i,j]<cutoff:
 				pos_array[i,j]=0
 
-def F_M(D_e, r, r_e, k_e):
+def F_M(r,bond):
     """
     Calculates the potential energy due to the Morse potential
     between a pair of atoms for a single time step
@@ -239,9 +245,15 @@ def F_M(D_e, r, r_e, k_e):
     -------
     Potential Energy : float
     """
-    r_mag = np.sqrt(np.sum(r*r))
-    r2 = r_mag - r_e
-    beta = np.sqrt(k_e/2*D_e)
+    params = {'CC':{'r_e': , 'D_e': ,'k_e': },
+              'CH':{'r_e': , 'D_e': ,'k_e': },
+              'HC':{'r_e': , 'D_e': ,'k_e': }}
+    values = params[bond]
+    k_e = values['k_e']
+    D_e = values['D_e']
+    r_e = values['r_e']
+    r2 = r - r_e
+    beta = np.sqrt(k_e/(2*D_e))
     return 2*beta*D_e*(np.exp(-2*beta*r2) - np.exp(-beta*r2))
 
 def DA(positions, i):
