@@ -228,23 +228,28 @@ def initial_velocities(data, T0):
 	v = np.array([p[i]/data[i][3] for i in range(len(data))])
 	return functions.rescale(v, T0)
 
-def F_inter(dist_arr,):
-	rc = functions.cutoff_r(dist_arr,cutoff)
-	indices = np.transpose(np.nonzero(rc))+1
+def F_inter(dist_arr,x):
+    rc = functions.cutoff_r(dist_arr,cutoff)
+    block = 12
+    for i in range(len(x)//block):
+        for j in range(block):
+            for k in range(block):
+                rc[i*block+j,i*block+k]=0
+    indices = np.transpose(np.nonzero(rc))+1
 
     #============= Force Calculations ==============
 
-	dir_F = np.zeros((N, N, 3))
-	mag_F = np.zeros((N,N))
-	for i in indices:
-		mag_F[i[0],i[1]] = functions.F_LJ(rc[i[0],i[1]])
-		mag_F[i[1],i[0]] = mag_F[i[0],i[1]]
-		dir_F[i[0],i[1]] = x_0[i[0]]-x_0[i[0]]
-		dir_F[i[1],i[0]] = -dir_F[i[0],i[1]]
+    dir_F = np.zeros((N, N, 3))
+    mag_F = np.zeros((N,N))
+    for i in indices:
+        mag_F[i[0],i[1]] = functions.F_LJ(rc[i[0],i[1]])
+        mag_F[i[1],i[0]] = mag_F[i[0],i[1]]
+        dir_F[i[0],i[1]] = x[i[0]]-x[i[0]]
+        dir_F[i[1],i[0]] = -dir_F[i[0],i[1]]
 
-	F = [[dir_F[i,j]*mag_F[i,j] for j in range(len(dir_F[0]))] 
-			    	    for j in range(len(dir_F))]
-	return F
+    F = [[dir_F[i,j]*mag_F[i,j] for j in range(len(dir_F[0]))] 
+                                for j in range(len(dir_F))]
+    return F
 
 def neighb_array():
     box = np.zeros((12,12))
@@ -256,72 +261,76 @@ def neighb_array():
                 l+=1
     return box
 
-def F_intra(neighb_array,positions):	
-    for i in range(len(positions)//12):
+def F_intra(neighb_array,x):
+    forces = np.zeros((len(x),3))
+    for i in range(len(x)//12):
         for j in range(len(neighb_array)):
             for k in range(j):
                 if neighb_array[j,k]==2 or neighb_array[j,k]==3:
                     continue
+                vec = x[12*i+j]-x[12*i+k]
                 elif neighb_array[j,k]==1:
-                    fmorse
+                    forces[i*12+j,k] = functions.F_M(r)*vec
                 elif neighb_array[j,k]==4:
-                    halflj
+                    forces[i*12+j,k] = 0.5*functions.F_LJ(r)*vec
                 else:
-                    functions.F_LJ(r)
-    return
+                    forces[12*i+j,k] = functions.F_LJ(r)*vec
+    return forces
 
 def dynamics(data, x0, v0, dt, t_max, filename="trajectory.xyz"):
-	"""Integrate equations of motion.
+    """Integrate equations of motion.
 
-	Parameters
-	----------
-	atoms : list
-		list of atom names
-	x0 : array
-		Nx3 array containing the starting coordinates of the atoms.
-	v0 : array
-		Nx3 array containing the starting velocities, 
-		eg np.zeros((N,3)) or velocities that generate 
-		a given temperature
-	dt : float
-		integration timestep
-	nsteps : int, optional
-		number of integrator time steps
-	filename : string
-		filename of trajectory output in xyz format
+    Parameters
+    ----------
+    atoms : list
+            list of atom names
+    x0 : array
+            Nx3 array containing the starting coordinates of the atoms.
+    v0 : array
+            Nx3 array containing the starting velocities, 
+            eg np.zeros((N,3)) or velocities that generate 
+            a given temperature
+    dt : float
+            integration timestep
+    nsteps : int, optional
+            number of integrator time steps
+    filename : string
+            filename of trajectory output in xyz format
 
-	Writes coordinates to file `filename`.
+    Writes coordinates to file `filename`.
 
-	Returns
-	-------
+    Returns
+    -------
 
-	Time : array
-	Position : array
-	Velocity : array
-	"""
-	nsteps = int(t_max/dt)
-	time = dt*np.arange(nsteps)
-	N = len(x0)
+    Time : array
+    Position : array
+    Velocity : array
+    """
+    nsteps = int(t_max/dt)
+    time = dt*np.arange(nsteps)
+    N = len(x0)
 
-	# Initial positions for every particle for t = 0
-	r = np.zeros((nsteps, N, 3))
-	r[0] = x0
+    # Initial positions for every particle for t = 0
+    r = np.zeros((nsteps, N, 3))
+    r[0] = x0
 
-	# Initial velocities for every particle for t = 0
-	v = np.zeros((nsteps, N, 3))
-	v[0] = v0
+    # Initial velocities for every particle for t = 0
+    v = np.zeros((nsteps, N, 3))
+    v[0] = v0
 
-	# Array of all initial distances 
-	r_0 = np.zeros((N, N))
-	r_0 = dist.cdist(x0,x0)
-        vhalf = np.zeros((len(x0), 3))
-        neighbs = neighb_array()
+    # Array of all initial distances 
+    r_0 = np.zeros((N, N))
+    r_0 = dist.cdist(x0,x0)
+    vhalf = np.zeros((len(x0), 3))
+    neighbs = neighb_array()
 
-        # Initial force calculations
-        F_intra(neighbs,x0)
+    # Initial force calculations
+    F_intra = F_intra(neighbs,x0)
+    F_inter = F_inter(r_0,x0)
+    F_tot = F_inter + F_intra
 #============= Velocity Verlet ===============================================
-	for t in tqdm.tqdm(range(nsteps)):
-            
+    for i in tqdm.tqdm(range(nsteps)):
+       vhalf = v[i]+0.5*dt*F_tot
 
 
 
