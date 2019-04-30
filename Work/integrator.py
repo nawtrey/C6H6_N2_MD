@@ -251,14 +251,14 @@ def a_inter(dist_arr,data,x):
 
     a = [[dir_F[:,i,j]*mag_F[i,j]/data[i][3] for i in range(len(dir_F[0]))] 
                                              for j in range(len(dir_F[0,0]))]
-    return np.transpose(np.sum(a,axis=0))
+    return np.sum(a,axis=0)
 
 def a_intra(neighb_array,dist_array,data,x):
     accel = np.zeros((3,len(x),len(x)))
     for i in range(len(x)//12):
         for j in range(len(neighb_array)):
             for k in range(j):
-                if (neighb_array[j,k]==2) or (neighb_array[j,k]==3):
+                if (neighb_array[j,k]==2) or (neighb_array[j,k]==3) or (neighb_array[j,k]==0):
                     continue
                 elif neighb_array[j,k]==1:
                     vec = x[12*i+j]-x[12*i+k]
@@ -321,15 +321,15 @@ def dynamics(data, x0, v0, dt, t_max, filename="trajectory.xyz"):
     N = len(x0)
 
     # Initial positions for every particle for t = 0
-    r = np.zeros((nsteps, N, 3))
+    r = np.zeros((nsteps+1, N, 3))
     r[0] = x0
 
     # Initial velocities for every particle for t = 0
-    v = np.zeros((nsteps, N, 3))
+    v = np.zeros((nsteps+1, N, 3))
     v[0] = v0
 
     # Time array
-    t = np.zeros(nsteps)
+    t = np.zeros(nsteps+1)
     t[0] = 0
 
     # Array of all initial distances 
@@ -344,7 +344,7 @@ def dynamics(data, x0, v0, dt, t_max, filename="trajectory.xyz"):
     a_tot = a_ter + a_tra
 #============= Velocity Verlet ===============================================
     for i in tqdm.tqdm(range(nsteps)):
-        vhalf = v[i]+0.5*dt*F_tot
+        vhalf = v[i]+0.5*dt*a_tot
         r[i+1] = r[i]+vhalf*dt
         r_dist = dist.cdist(r[i+1],r[i+1])
         a_tra = a_intra(neighbs,r_dist,data,r[i+1])
@@ -354,7 +354,6 @@ def dynamics(data, x0, v0, dt, t_max, filename="trajectory.xyz"):
         t[i+1] = dt*(i+1)
 
     #============ Write to .xyz file ==========================================
-
     with open(filename, 'w') as xyzfile:
         for i in range(0, nsteps):
             IO.write_xyz_frame(xyzfile, atoms, r[i], i, "simulation")     # Writes all (x, y, z) data to file
@@ -371,81 +370,84 @@ def dynamics(data, x0, v0, dt, t_max, filename="trajectory.xyz"):
 
 if __name__ == "__main__":
 
-    #------------------------------------------------------------
-    #--------------------- Initialization -----------------------
-    #------------------------------------------------------------
-	import argparse
-	parser = argparse.ArgumentParser()
-	parser.add_argument('--Nmol', help="number of benzene")
-	parser.add_argument('--Nsteps', help="number of steps")
-	parser.add_argument('--dt', help="time step")
-	parser.add_argument('-t', help="total time")
-	args = parser.parse_args()
+#------------------------------------------------------------
+#--------------------- Initialization -----------------------
+#------------------------------------------------------------
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--Nmol', help="number of benzene")
+    parser.add_argument('--Nsteps', help="number of steps")
+    parser.add_argument('--dt', help="time step")
+    parser.add_argument('-t', help="total time")
+    args = parser.parse_args()
 
-    #------------------------------------------------------------
-    #------------------------------------------------------------
-    #------------------------------------------------------------
+#------------------------------------------------------------
+#------------------------------------------------------------
+#------------------------------------------------------------
 
-	if args.t and args.dt and args.Nsteps:
-		raise ValueError('Choose 2: dt, t, Nsteps')
+    if args.t and args.dt and args.Nsteps:
+            raise ValueError('Choose 2: dt, t, Nsteps')
 
-	if not args.t:
-		dt = float(args.dt)
-		Nsteps = int(args.Nsteps)
-		t = dt*Nsteps
+    if not args.t:
+            dt = float(args.dt)
+            Nsteps = int(args.Nsteps)
+            t = dt*Nsteps
 
-	if not args.dt:
-		t = float(args.t)
-		Nsteps = int(args.Nsteps)
-		dt = t/Nsteps
+    if not args.dt:
+            t = float(args.t)
+            Nsteps = int(args.Nsteps)
+            dt = t/Nsteps
 
-	if not args.Nsteps:
-		dt = float(args.dt)
-		t = float(args.t)
-		Nsteps = t/dt
+    if not args.Nsteps:
+            dt = float(args.dt)
+            t = float(args.t)
+            Nsteps = t/dt
 
-	os.system('python positions.py --Nmolecules {0}'.format(int(args.Nmol)))
-	data = import_data()
-	x_0 = initialize_positions(data)
-	v_0 = initial_velocities(data, temp_0[1])
+    Natom = 12*int(args.Nmol)
 
-    #------------------------------------------------------------
-    #--------------------- Propane God --------------------------
-    #------------------------------------------------------------
+    os.system('python positions.py --Nmolecules {0}'.format(int(args.Nmol)))
+    data = import_data()
+    x_0 = initialize_positions(data)
+    v_0 = initial_velocities(data, temp_0[1])
 
-	print("……..|::::::::|::: : : : : : : _„„--~~~~~~-„: : : : :|")
-	print("……..|:::::::|: :: : : : :_„„-: : : : : : : : ~--„_: |")
-	print("……….|::::::|: : : „--~~````~~````-„…_..„~````````````¯")
-	print("……….|:::::,`:_„„-|: : :_„---~:::|``¯¯````|:: ~---„_:::|")
-	print("……..,~-,_|``: : :|: :( ͡° ͜ʖ ͡°) : |: : : : |:( ͡° ͜ʖ ͡°)): |")
-	print("……../,`-,: : ::: ``-,__________,-``:::: ``-„__________|")
-	print("……..|: :|: : : : : : :: : : : :„: : : : :-,:: : ::: :|")
-	print("………`,:`: : : : : : : : : ::::,-`__: : : :_`,: : : : ;|")
-	print("……….`-,-`:: : : :______„-: : :``: : ¯``~~``: `: : ~--|`")
-	print("………….|: ,: : : : : : : : : : : : : : : : : : :: : : |")
-	print("………….`|: |: : : : : : : : -,„_„„-~~~--~~--„_: : : : |")
-	print("…………..|: |: : : : : : : : : : : :--------~: : : : : |")
-	print("You've been visited by the propane god, I tell you hwat. Don't 'alt-tab' out of here or Hank Hill will bring the pro pain.")
-	print("Generating data files bfor", len(data), "atoms in simulation number", sim_n)
-	start = time.time()                                             # Initial time stamp
-	t,r,v = dynamics(data, x_0, v_0, dt, t, filename="trajectory.xyz")
-	end = time.time()                       # Final time stamp
-	total_time = end - start                # Calculates difference of time stamps
-	timeperatom = total_time/N              # Calculates run time of integrator per atom
-	timeperstep = total_time*dt/t           # Calculates run time of integrator per time step
+#------------------------------------------------------------
+#--------------------- Propane God --------------------------
+#------------------------------------------------------------
 
-	#--------------------- File generation ----------------------
+    print("……..|::::::::|::: : : : : : : _„„--~~~~~~-„: : : : :|")
+    print("……..|:::::::|: :: : : : :_„„-: : : : : : : : ~--„_: |")
+    print("……….|::::::|: : : „--~~````~~````-„…_..„~````````````¯")
+    print("……….|:::::,`:_„„-|: : :_„---~:::|``¯¯````|:: ~---„_:::|")
+    print("……..,~-,_|``: : :|: :( ͡° ͜ʖ ͡°) : |: : : : |:( ͡° ͜ʖ ͡°)): |")
+    print("……../,`-,: : ::: ``-,__________,-``:::: ``-„__________|")
+    print("……..|: :|: : : : : : :: : : : :„: : : : :-,:: : ::: :|")
+    print("………`,:`: : : : : : : : : ::::,-`__: : : :_`,: : : : ;|")
+    print("……….`-,-`:: : : :______„-: : :``: : ¯``~~``: `: : ~--|`")
+    print("………….|: ,: : : : : : : : : : : : : : : : : : :: : : |")
+    print("………….`|: |: : : : : : : : -,„_„„-~~~--~~--„_: : : : |")
+    print("…………..|: |: : : : : : : : : : : :--------~: : : : : |")
+    print("You've been visited by the propane god, I tell you hwat. Don't 'alt-tab' out of here or Hank Hill will bring the pro pain.")
+    print("Generating data files bfor", len(data), "atoms in simulation number", sim_n)
+    start = time.time()                                             # Initial time stamp
+    atoms = [data[i][2] for i in range(len(data))]
+    t,r,v = dynamics(data, x_0, v_0, dt, t, filename="trajectory.xyz")
+    end = time.time()                       # Final time stamp
+    total_time = end - start                # Calculates difference of time stamps
+    timeperatom = total_time/Natom          # Calculates run time of integrator per atom
+    timeperstep = total_time*dt/t           # Calculates run time of integrator per time step
 
-	j = ("Simulation number:", sim_n)
-	k = ("Total Argon atoms in system:", N)         # Tuple variable assignments for clarity
-	l = ("Integrator runtime:", total_time)
-	m = ("Average integrator runtime per atom:", timeperatom)
-	n = ("Average integrator runtime per time step:", timeperstep)
+    #--------------------- File generation ----------------------
 
-	tuples = [j, k, l, m, n]                        # Convert tuples to list of tuples
+    j = ("Simulation number:", sim_n)
+    k = ("Total atoms in system:", Natom)         # Tuple variable assignments for clarity
+    l = ("Integrator runtime:", total_time)
+    m = ("Average integrator runtime per atom:", timeperatom)
+    n = ("Average integrator runtime per time step:", timeperstep)
 
-	with open('integrator_data.txt', 'w') as file:
-		file.write('\n'.join('{} {}'.format(i[0],i[1]) for i in tuples))    # Writes tuples to rows in file 'integrator.txt'
+    tuples = [j, k, l, m, n]                        # Convert tuples to list of tuples
+
+    with open('integrator_data.txt', 'w') as file:
+            file.write('\n'.join('{} {}'.format(i[0],i[1]) for i in tuples))    # Writes tuples to rows in file 'integrator.txt'
 
 
 
