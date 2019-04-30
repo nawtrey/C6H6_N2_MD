@@ -261,20 +261,20 @@ def a_intra(neighb_array,dist_array,data,x):
                 if (neighb_array[j,k]==2) or (neighb_array[j,k]==3) or (neighb_array[j,k]==0):
                     continue
                 elif neighb_array[j,k]==1:
-                    vec = x[12*i+j]-x[12*i+k]
+                    vec = -(x[12*i+j]-x[12*i+k])
                     bond = data[12*i+j][2]+data[12*i+k][2]
-                    r = dist_array[12*i+j,12*i+k]
-                    accel[:,i*12+j,12*i+k] = functions.F_M(r,bond)*vec/data[12*i+j][3]
+                    r2 = dist_array[12*i+j,12*i+k]
+                    accel[:,i*12+j,12*i+k] = functions.F_M(r2,bond)*vec/data[12*i+j][3]
                 elif neighb_array[j,k]==4:
-                    vec = x[12*i+j]-x[12*i+k]
+                    vec = -(x[12*i+j]-x[12*i+k])
                     bond = data[12*i+j][2]+data[12*i+k][2]
-                    r = dist_array[12*i+j,12*i+k]
-                    accel[:,i*12+j,12*i+k] = 0.5*functions.F_LJ(r)*vec/data[12*i+j][3]
+                    r2 = dist_array[12*i+j,12*i+k]
+                    accel[:,i*12+j,12*i+k] = 0.5*functions.F_LJ(r2)*vec/data[12*i+j][3]
                 else:
-                    vec = x[12*i+j]-x[12*i+k]
+                    vec = -(x[12*i+j]-x[12*i+k])
                     bond = data[12*i+j][2]+data[12*i+k][2]
-                    r = dist_array[12*i+j,12*i+k]
-                    accel[:,12*i+j,12*i+k] = functions.F_LJ(r)*vec/data[12*i+j][3]
+                    r2 = dist_array[12*i+j,12*i+k]
+                    accel[:,12*i+j,12*i+k] = functions.F_LJ(r2)*vec/data[12*i+j][3]
     return np.transpose(np.sum(accel,axis=2))
 
 def neighb_array():
