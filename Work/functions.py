@@ -10,7 +10,9 @@
 
 import numpy as np
 
-kB      = 1.3806488e-23     # J/K; Bolzmann's constant
+kB = 1.3806488e-23     # J/K; Bolzmann's constant
+eps = 1.654e-21/kB  # Kelvin
+sigma = 0.341           # nm
 
 #========================================================
 #============= Functions ================================
@@ -160,18 +162,6 @@ def F_LJ(r):
     """
     return 4*eps*(6/r*(sigma/r)**12 - 12/r*(sigma/r)**6)
 
-def F_M(D_e, r, r_e, k_e):
-    """
-    Morse force magnitude
-
-    Paramaters
-    ----------
-    """
-    beta = np.sqrt(k_e/2*D_e)
-    r_mag = np.sqrt(np.sum(positions*positions))
-    r = r_mag - r_e
-    return -2*D_e*beta*(np.exp(-beta*r)-np.exp(-2*beta*r))
-
 def V_LJ(positions):
     """
     Calculates the potential energy due to the LJ potential
@@ -186,13 +176,11 @@ def V_LJ(positions):
     -------
     Potential Energy : float
     """
-    epsilon = 1.654e-21/kB  # Kelvin
-    sigma = 0.341           # nm
     r_mag = np.sqrt(np.sum(positions*positions))      # Calculates the magnitude of r_vector
     if r_mag == 0.0:
         return 0
     else:
-        return 4*epsilon*((sigma/r_mag)**12 - (sigma/r_mag**6))
+        return 4*eps*((sigma/r_mag)**12 - (sigma/r_mag**6))
 
 def V_M(r,bond):
     """
@@ -211,9 +199,9 @@ def V_M(r,bond):
     -------
     Potential Energy : float
     """
-    params = {'CC':{'r_e': , 'D_e': ,'k_e': },
-              'CH':{'r_e': , 'D_e': ,'k_e': },
-              'HC':{'r_e': , 'D_e': ,'k_e': }}
+    params = {'CC':{'r_e': 0.139, 'D_e': 500.0000,'k_e': 392495.2},
+              'CH':{'r_e': 0.109, 'D_e': 472.3736,'k_e': 392495.2},
+              'HC':{'r_e': 0.109, 'D_e': 472.3736,'k_e': 392495.2}}
     values = params[bond]
     k_e = values['k_e']
     D_e = values['D_e']
@@ -222,11 +210,6 @@ def V_M(r,bond):
     beta = np.sqrt(k_e/(2*D_e))
     return D_e*(1-np.exp(-beta*r2))**2
 
-def cutoff_r(pos_array,cutoff):
-	for i in range(len(pos_array)):
-		for j in range(len(pos_array[0])):
-			if pos_array[i,j]<cutoff:
-				pos_array[i,j]=0
 
 def F_M(r,bond):
     """
@@ -245,16 +228,16 @@ def F_M(r,bond):
     -------
     Potential Energy : float
     """
-    params = {'CC':{'r_e': , 'D_e': ,'k_e': },
-              'CH':{'r_e': , 'D_e': ,'k_e': },
-              'HC':{'r_e': , 'D_e': ,'k_e': }}
+    params = {'CC':{'r_e': 0.139, 'D_e': 500.0000,'k_e': 392495.2},
+              'CH':{'r_e': 0.109, 'D_e': 472.3736,'k_e': 392495.2},
+              'HC':{'r_e': 0.109, 'D_e': 472.3736,'k_e': 392495.2}}
     values = params[bond]
     k_e = values['k_e']
     D_e = values['D_e']
     r_e = values['r_e']
     r2 = r - r_e
     beta = np.sqrt(k_e/(2*D_e))
-    return 2*beta*D_e*(np.exp(-2*beta*r2) - np.exp(-beta*r2))
+    return -2*beta*D_e*(np.exp(-2*beta*r2) - np.exp(-beta*r2))
 
 def DA(positions, i):
     """
@@ -288,14 +271,21 @@ def V_D(positions, i):
     theta = DA(positions, i)
 
     # "Cosine functional form"
-    theta_0 =    # angle where potential passes through its minimum value, reference dihedral angle
-    V_n =      # barrier height, "force constant"
-    n =     # multiplicity, "the number of minima as the bond is rotated through 360deg"
+    theta_0 = np.pi*120/180  # angle where potential passes through its minimum value, reference dihedral angle
+    V_n = 10     # barrier height, "force constant"
+    n = 1    # multiplicity, "the number of minima as the bond is rotated through 360deg"
     V_DA =  (V_n/2) * (1 + np.cos(n*theta - theta_0))  # dihedral angle potential - cosine form]
 
     # "Harmonic form"
     phi_0 =   # reference dihedral angle
-    k =   # force constant (different that cosine form force constant)
+    k = 10  # force constant (different that cosine form force constant)
     V_DH = k *(theta - phi_0)**2
 
     return V_DH
+
+def cutoff_r(pos_array,cutoff):
+    for i in range(len(pos_array)):
+        for j in range(len(pos_array[0])):
+            if pos_array[i,j]<cutoff:
+                pos_array[i,j]=0
+    return pos_array
