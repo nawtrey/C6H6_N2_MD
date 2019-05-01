@@ -225,13 +225,13 @@ def initial_velocities(data, T0):
 	 Returns velocities as `(N, 3)` array.
 	"""
 	N = len(data)
-	p0 = functions.random_momenta(N)
+	p0 = functions.random_direction(N)
 	p = functions.remove_linear_momentum(p0)
 	v = np.array([p[i]/data[i][3] for i in range(len(data))])
 	return functions.rescale(v, T0)
 
 def a_inter(dist_arr,data,x):
-    rc = functions.cutoff_r(dist_arr,cutoff)
+    rc = functions.cutoff_r(dist_arr.copy(),cutoff)
     block = 12
     for i in range(len(x)//block):
         for j in range(block):
@@ -244,14 +244,17 @@ def a_inter(dist_arr,data,x):
     dir_F = np.zeros((3,N,N))
     mag_F = np.zeros((N,N))
     for i in indices:
-        mag_F[i[0],i[1]] = functions.F_LJ(rc[i[0],i[1]])
-        mag_F[i[1],i[0]] = mag_F[i[0],i[1]]
-        dir_F[:,i[0],i[1]] = x[i[0]]-x[i[0]]
-        dir_F[:,i[1],i[0]] = -dir_F[:,i[0],i[1]]
+        mag_F[i[0]-1,i[1]-1] = functions.F_LJ(rc[i[0]-1,i[1]-1])
+        mag_F[i[1]-1,i[0]-1] = mag_F[i[0]-1,i[1]-1]
+        vec = x[i[0]-1]-x[i[1]-1]
+        dir_F[:,i[0]-1,i[1]-1] = vec/np.linalg.norm(vec)
+        dir_F[:,i[1]-1,i[0]-1] = -dir_F[:,i[0]-1,i[1]-1]
 
     a = [[dir_F[:,i,j]*mag_F[i,j]/data[i][3] for i in range(len(dir_F[0]))] 
                                              for j in range(len(dir_F[0,0]))]
-    return np.sum(a,axis=0)
+    a = np.transpose(a)
+    return np.transpose(np.sum(a,axis=2))
+
 
 def a_intra(neighb_array,dist_array,data,x):
     accel = np.zeros((3,len(x),len(x)))
@@ -261,21 +264,25 @@ def a_intra(neighb_array,dist_array,data,x):
                 if (neighb_array[j,k]==2) or (neighb_array[j,k]==3) or (neighb_array[j,k]==0):
                     continue
                 elif neighb_array[j,k]==1:
-                    vec = -(x[12*i+j]-x[12*i+k])
+                    continue
+                    vec = (x[12*i+j]-x[12*i+k])
                     bond = data[12*i+j][2]+data[12*i+k][2]
                     r2 = dist_array[12*i+j,12*i+k]
-                    accel[:,i*12+j,12*i+k] = functions.F_M(r2,bond)*vec/data[12*i+j][3]
+                    accel[:,i*12+j,12*i+k] = functions.F_M(r2,bond)*vec/(np.linalg.norm(vec)*data[12*i+j][3])
+                    accel[:,12*i+k,12*i+j] = -accel[:,12*i+j,12*i+k]
                 elif neighb_array[j,k]==4:
-                    vec = -(x[12*i+j]-x[12*i+k])
-                    bond = data[12*i+j][2]+data[12*i+k][2]
+#                    continue
+                    vec = (x[12*i+j]-x[12*i+k])
                     r2 = dist_array[12*i+j,12*i+k]
-                    accel[:,i*12+j,12*i+k] = 0.5*functions.F_LJ(r2)*vec/data[12*i+j][3]
+                    accel[:,i*12+j,12*i+k] = 0.5*functions.F_LJ(r2)*vec/(np.linalg.norm(vec)*data[12*i+j][3])
+                    accel[:,12*i+k,12*i+j] = -accel[:,12*i+j,12*i+k]
                 else:
-                    vec = -(x[12*i+j]-x[12*i+k])
-                    bond = data[12*i+j][2]+data[12*i+k][2]
+#                    continue
+                    vec = (x[12*i+j]-x[12*i+k])
                     r2 = dist_array[12*i+j,12*i+k]
-                    accel[:,12*i+j,12*i+k] = functions.F_LJ(r2)*vec/data[12*i+j][3]
-    return np.transpose(np.sum(accel,axis=2))
+                    accel[:,12*i+j,12*i+k] = functions.F_LJ(r2)*vec/(np.linalg.norm(vec)*data[12*i+j][3])
+                    accel[:,12*i+k,12*i+j] = -accel[:,12*i+j,12*i+k]
+    return np.transpose(np.sum(accel,axis=2)),accel
 
 def neighb_array():
     box = np.zeros((12,12))

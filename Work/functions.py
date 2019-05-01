@@ -11,14 +11,14 @@
 import numpy as np
 
 kB = 1.3806488e-23     # J/K; Bolzmann's constant
-eps = 1.654e-21/kB  # Kelvin
+eps = 1.654e-26/kB  # Kelvin
 sigma = 0.341           # nm
 
 #========================================================
 #============= Functions ================================
 #========================================================
 
-def random_momenta(N):
+def random_direction(N):
     """
     Takes a number of particles to create an array of random momenta
 
@@ -32,7 +32,10 @@ def random_momenta(N):
     Velocities : array
         (Nx3) array of random velocities (Vx, Vy, Vz)
     """
-    return np.random.rand(N, 3) - 0.5
+    rand_dir = np.random.rand(N, 3) - 0.5
+    normalized = [i/np.linalg.norm(i) for i in rand_dir]
+    return normalized
+
 
 def instantaneous_temperature(vels, masses):
     """
@@ -228,64 +231,64 @@ def F_M(r,bond):
     -------
     Potential Energy : float
     """
-    params = {'CC':{'r_e': 0.139, 'D_e': 500.0000e-6,'k_e': 3.9249502e6},
-              'CH':{'r_e': 0.109, 'D_e': 472.3736e-6,'k_e': 3.9249502e6},
-              'HC':{'r_e': 0.109, 'D_e': 472.3736e-6,'k_e': 3.9249502e6}}
+    params = {'CC':{'r_e': 0.139, 'D_e': 500.0000,'k_e': 3.9249502e6},
+              'CH':{'r_e': 0.109, 'D_e': 472.3736,'k_e': 3.9249502e6},
+              'HC':{'r_e': 0.109, 'D_e': 472.3736,'k_e': 3.9249502e6}}
     values = params[bond]
     k_e = values['k_e']
     D_e = values['D_e']
     r_e = values['r_e']
     r2 = r - r_e
     beta = np.sqrt(k_e/(2*D_e))
-    return -2*beta*D_e*(np.exp(-2*beta*r2) - np.exp(-beta*r2))
+    return 2*beta*D_e*(np.exp(-2*beta*r2) - np.exp(-beta*r2))
 
-def DA(positions, i):
-    """
-    Calculates the dihedral angle
-
-    Paramaters
-    ----------
-    positions : array
-        (Nx3) array of positions for every atom in system
-    i : reference atom
-    """
-    r_ij = np.abs(positions[i] - positions[i+1])
-    r_jk = np.abs(positions[i] - positions[i+6])
-    r_lk = np.abs(positions[i+6] - positions[i+12])
-    a = np.cross(r_ij, r_jk)
-    b = np.cross(r_lk, r_jk)
-    costheta = np.dot(a,b) / np.linalg.norm(a*b)
-    theta = np.arccos(costheta)
-    return theta
-
-def V_D(positions, i):
-    """
-    Calculates the Dihedral Potential
-
-    Paramaters
-    ----------
-    positions : array
-        (Nx3) array of positions for every atom in system
-    i : reference atom
-    """
-    theta = DA(positions, i)
-
-    # "Cosine functional form"
-    theta_0 = np.pi*120/180  # angle where potential passes through its minimum value, reference dihedral angle
-    V_n = 10     # barrier height, "force constant"
-    n = 1    # multiplicity, "the number of minima as the bond is rotated through 360deg"
-    V_DA =  (V_n/2) * (1 + np.cos(n*theta - theta_0))  # dihedral angle potential - cosine form]
-
-    # "Harmonic form"
-    phi_0 =   # reference dihedral angle
-    k = 10  # force constant (different that cosine form force constant)
-    V_DH = k *(theta - phi_0)**2
-
-    return V_DH
+#def DA(positions, i):
+#    """
+#    Calculates the dihedral angle
+#
+#    Paramaters
+#    ----------
+#    positions : array
+#        (Nx3) array of positions for every atom in system
+#    i : reference atom
+#    """
+#    r_ij = np.abs(positions[i] - positions[i+1])
+#    r_jk = np.abs(positions[i] - positions[i+6])
+#    r_lk = np.abs(positions[i+6] - positions[i+12])
+#    a = np.cross(r_ij, r_jk)
+#    b = np.cross(r_lk, r_jk)
+#    costheta = np.dot(a,b) / np.linalg.norm(a*b)
+#    theta = np.arccos(costheta)
+#    return theta
+#
+#def V_D(positions, i):
+#    """
+#    Calculates the Dihedral Potential
+#
+#    Paramaters
+#    ----------
+#    positions : array
+#        (Nx3) array of positions for every atom in system
+#    i : reference atom
+#    """
+#    theta = DA(positions, i)
+#
+#    # "Cosine functional form"
+#    theta_0 = np.pi*120/180  # angle where potential passes through its minimum value, reference dihedral angle
+#    V_n = 10     # barrier height, "force constant"
+#    n = 1    # multiplicity, "the number of minima as the bond is rotated through 360deg"
+#    V_DA =  (V_n/2) * (1 + np.cos(n*theta - theta_0))  # dihedral angle potential - cosine form]
+#
+#    # "Harmonic form"
+#    phi_0 =   # reference dihedral angle
+#    k = 10  # force constant (different that cosine form force constant)
+#    V_DH = k *(theta - phi_0)**2
+#
+#    return V_DH
 
 def cutoff_r(pos_array,cutoff):
     for i in range(len(pos_array)):
         for j in range(len(pos_array[0])):
-            if pos_array[i,j]<cutoff:
+            if pos_array[i,j]>cutoff:
                 pos_array[i,j]=0
     return pos_array

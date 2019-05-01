@@ -16,7 +16,7 @@ import numpy as np
 a_n = 6 																# Numberdd of atoms of each type
 l = 0.139	 															# nm; C-C bond lengths in benzene
 s = 0.109 																# nm; H-C bond length
-basis = (l+s)*np.array([[1,0,0],[0,1,0],[0,0,1]])								# basis vectors for placing molecule centers
+basis = 4*(l+s)*np.array([[1,0,0],[0,1,0],[0,0,1]])								# basis vectors for placing molecule centers
 
 def generate_benzene(r_vector):
     """Generates single benzene molecule at location r_vector perpendicular to the z-axis
