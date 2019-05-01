@@ -253,7 +253,7 @@ def a_inter(dist_arr,data,x):
     a = [[dir_F[:,i,j]*mag_F[i,j]/data[i][3] for i in range(len(dir_F[0]))] 
                                              for j in range(len(dir_F[0,0]))]
     a = np.transpose(a)
-    return np.transpose(np.sum(a,axis=2))
+    return np.transpose(np.sum(a,axis=2)),a
 
 
 def a_intra(neighb_array,dist_array,data,x):
@@ -339,6 +339,12 @@ def dynamics(data, x0, v0, dt, t_max, filename="trajectory.xyz"):
     t = np.zeros(nsteps+1)
     t[0] = 0
 
+    a_ter = np.zeros((N,3,nsteps+1))
+    acc_ter = np.zeros((3,N,N,nsteps+1))
+    a_tra = np.zeros((N,3,nsteps+1))
+    acc_tra = np.zeros((3,N,N,nsteps+1))
+    a_tot = np.zeros((N,3,nsteps+1))
+
     # Array of all initial distances 
     r_dist = np.zeros((N, N))
     r_dist = dist.cdist(r[0],r[0])
@@ -346,18 +352,18 @@ def dynamics(data, x0, v0, dt, t_max, filename="trajectory.xyz"):
     neighbs = neighb_array()
 
     # Initial force calculations
-    a_tra = a_intra(neighbs,r_dist,data,r[0])
-    a_ter = a_inter(r_dist,data,r[0])
-    a_tot = a_ter + a_tra
+    a_tra[:,:,0],acc_tra[:,:,:,0] = a_intra(neighbs,r_dist,data,r[0])
+    a_ter[:,:,0],acc_ter[:,:,:,0] = a_inter(r_dist,data,r[0])
+    a_tot[:,:,0] = a_ter[:,:,0] + a_tra[:,:,0]
 #============= Velocity Verlet ===============================================
     for i in tqdm.tqdm(range(nsteps)):
-        vhalf = v[i]+0.5*dt*a_tot
+        vhalf = v[i]+0.5*dt*a_tot[:,:,i]
         r[i+1] = r[i]+vhalf*dt
         r_dist = dist.cdist(r[i+1],r[i+1])
-        a_tra = a_intra(neighbs,r_dist,data,r[i+1])
-        a_ter = a_inter(r_dist,data,r[i+1])
-        a_tot = a_ter + a_tra
-        v[i+1] = v[i]+vhalf+0.5*dt*a_tot
+        a_tra[:,:,i+1],acc_tra[:,:,:,i+1] = a_intra(neighbs,r_dist,data,r[i+1])
+        a_ter[:,:,i+1],acc_ter[:,:,:,i+1] = a_inter(r_dist,data,r[i+1])
+        a_tot[:,:,i+1] = a_ter[:,:,i+1] + a_tra[:,:,i+1]
+        v[i+1] = v[i]+vhalf+0.5*dt*a_tot[:,:,i+1]
         t[i+1] = dt*(i+1)
 
     #============ Write to .xyz file ==========================================
@@ -368,7 +374,7 @@ def dynamics(data, x0, v0, dt, t_max, filename="trajectory.xyz"):
         with open('velocities.xyz', 'w') as xyzfile:
             for i in range(0, nsteps):
                 IO.write_xyz_frame(xyzfile, atoms, v[i], i, "simulation")     # Writes all (v_x, v_y, v_z) data to file
-    return t, r, v
+    return t, r, v, a_ter, a_tra,a_tot
 
 
 #=============================================================================================================
@@ -437,7 +443,7 @@ if __name__ == "__main__":
     print("Generating data files bfor", len(data), "atoms in simulation number", sim_n)
     start = time.time()                                             # Initial time stamp
     atoms = [data[i][2] for i in range(len(data))]
-    t,r,v = dynamics(data, x_0, v_0, dt, t, filename="trajectory.xyz")
+    t,r,v,a_ter,a_tra,a_tot = dynamics(data, x_0, v_0, dt, t, filename="trajectory.xyz")
     end = time.time()                       # Final time stamp
     total_time = end - start                # Calculates difference of time stamps
     timeperatom = total_time/Natom          # Calculates run time of integrator per atom
