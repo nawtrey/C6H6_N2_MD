@@ -231,9 +231,9 @@ def F_M(r,bond):
     -------
     Potential Energy : float
     """
-    params = {'CC':{'r_e': 0.139, 'D_e': 922,'k_e': 1.49017e11},
-              'CH':{'r_e': 0.109, 'D_e': 110,'k_e': 9.685e10},
-              'HC':{'r_e': 0.109, 'D_e': 110,'k_e': 9.685e10}}
+    params = {'CC':{'r_e': 0.139, 'D_e': 922,'k_e': 1.49017e6},
+              'CH':{'r_e': 0.109, 'D_e': 110,'k_e': 9.685e5},
+              'HC':{'r_e': 0.109, 'D_e': 110,'k_e': 9.685e5}}
     values = params[bond]
     k_e = values['k_e']
     D_e = values['D_e']
