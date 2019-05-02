@@ -1,5 +1,7 @@
 Group contributions
 
+All members strategized on project development together.
+
 nawtrey: 
 	- Wrote code to generate benzene molecules given a position vector input
 	- Wrote code that outputs all molecule data to Data.txt file (atom name, atom number, molecule number, mass, neighbors, etc)
@@ -10,3 +12,9 @@ nawtrey:
 	- Added Hank Hill to integrator.txt for giggles
 	- Wrote code that outputs integrator time statistics to file 'integrator_data.txt'
 	- Assisted in abstract writing and poster development
+
+jgens:
+	- Wrote functions in functions.py
+	- Contributed writing on abstract and poster 
+	- Gave general debugging assistance in integrator.py
+	
