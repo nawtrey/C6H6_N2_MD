@@ -231,7 +231,7 @@ def F_M(r,bond):
     -------
     Potential Energy : float
     """
-    params = {'CC':{'r_e': 0.139, 'D_e': 922,'k_e': 1.49017e6},
+    params = {'CC':{'r_e': 0.139, 'D_e': 922000,'k_e': 1.49017e6},
               'CH':{'r_e': 0.109, 'D_e': 110,'k_e': 9.685e5},
               'HC':{'r_e': 0.109, 'D_e': 110,'k_e': 9.685e5}}
     values = params[bond]
@@ -295,7 +295,8 @@ def constraints(positions,data):
     rh = 0.109
     
     #force constant
-    k = 10000000
+    kc = 100000000
+    kh = 100000000000
 
     #define a plane based on carbons 1 3 5
     x_c = 1/3*(positions[0][0]+positions[2][0]+positions[4][0])
@@ -328,7 +329,8 @@ def constraints(positions,data):
 
     forces = np.zeros((12,3))
     forces = [[(eq_vecs[i][0]-rvecs[i][0])/data[i][3],(eq_vecs[i][1]-rvecs[i][1])/data[i][3],(eq_vecs[i][2]-rvecs[i][2])/data[i][3]] for i in range(len(rvecs))]
-    forces = np.multiply(forces,k)
+    forces[:6] = np.multiply(forces[:6],kc)
+    forces[6:] = np.multiply(forces[6:],kh)
     return forces
     
 def cutoff_r(pos_array,cutoff):

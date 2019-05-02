@@ -265,20 +265,20 @@ def a_intra(neighb_array,dist_array,data,x):
                     continue
                 elif neighb_array[j,k]==1:
 #                    continue
-                    vec = -(x[12*i+j]-x[12*i+k])
+                    vec = (x[12*i+j]-x[12*i+k])
                     bond = data[12*i+j][2]+data[12*i+k][2]
                     r2 = dist_array[12*i+j,12*i+k]
                     accel[:,i*12+j,12*i+k] = functions.F_M(r2,bond)*vec/(dist_array[12*i+j,12*i+k]*data[12*i+j][3])
                     accel[:,12*i+k,12*i+j] = accel[:,12*i+j,12*i+k]
                 elif neighb_array[j,k]==4:
 #                    continue
-                    vec = -(x[12*i+j]-x[12*i+k])
+                    vec = (x[12*i+j]-x[12*i+k])
                     r2 = dist_array[12*i+j,12*i+k]
                     accel[:,i*12+j,12*i+k] = 0.5*functions.F_LJ(r2)*vec/(dist_array[12*i+j,12*i+k]*data[12*i+j][3])
                     accel[:,12*i+k,12*i+j] = -accel[:,12*i+j,12*i+k]
                 elif neighb_array[j,k]==5:
 #                    continue
-                    vec = -(x[12*i+j]-x[12*i+k])
+                    vec = (x[12*i+j]-x[12*i+k])
                     r2 = dist_array[12*i+j,12*i+k]
                     accel[:,12*i+j,12*i+k] = functions.F_LJ(r2)*vec/(dist_array[12*i+j,12*i+k]*data[12*i+j][3])
                     accel[:,12*i+k,12*i+j] = -accel[:,12*i+j,12*i+k]
@@ -286,7 +286,7 @@ def a_intra(neighb_array,dist_array,data,x):
                     raise AttributeError('argh!!!!!')
     accs1 = np.transpose(np.sum(accel,axis=2))
     accs2 = functions.constraints(x,data)
-    return accs1,accel
+    return accs1+accs2,accel
 
 def neighb_array():
     box = np.zeros((12,12))
