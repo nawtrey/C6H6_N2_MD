@@ -10,3 +10,11 @@ nawtrey:
 	- Added Hank Hill to integrator.txt for giggles
 	- Wrote code that outputs integrator time statistics to file 'integrator_data.txt'
 	- Assisted in abstract writing and poster development
+
+rsexton: 
+	- Generalized code to generate and write an arbitrary number of benzene
+	- Wrote code that reads Data.txt into the integrator script
+	- Wrote code to parse neighbor types and calculate forces accordingly
+	- Sped up code using scipy cdist and cutoffs for nonbonded interactions
+	- Wrote code to calculate inter and intra-molecular forces
+	- Wrote code to allow for command line input and only requiring to run one script
