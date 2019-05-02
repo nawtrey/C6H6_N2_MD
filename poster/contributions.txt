@@ -1,0 +1,12 @@
+Group contributions
+
+nawtrey: 
+	- Wrote code to generate benzene molecules given a position vector input
+	- Wrote code that outputs all molecule data to Data.txt file (atom name, atom number, molecule number, mass, neighbors, etc)
+	- Assisted in converting functions to SI units
+	- Wrote dictionary that provides list of all neighbors for each atom in a single molecule
+	- Assisted in writing function that can determine the neighbors of each atom in any molecule in system
+	- Provided general debugging assistance for logic errors in integrator
+	- Added Hank Hill to integrator.txt for giggles
+	- Wrote code that outputs integrator time statistics to file 'integrator_data.txt'
+	- Assisted in abstract writing and poster development
