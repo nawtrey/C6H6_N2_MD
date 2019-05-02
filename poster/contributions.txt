@@ -1,5 +1,7 @@
 Group contributions
 
+All members strategized on project development together.
+
 nawtrey: 
 	- Wrote code to generate benzene molecules given a position vector input
 	- Wrote code that outputs all molecule data to Data.txt file (atom name, atom number, molecule number, mass, neighbors, etc)
@@ -18,3 +20,8 @@ rsexton:
 	- Sped up code using scipy cdist and cutoffs for nonbonded interactions
 	- Wrote code to calculate inter and intra-molecular forces
 	- Wrote code to allow for command line input and only requiring to run one script
+jgens:
+	- Wrote functions in functions.py
+	- Contributed writing on abstract and poster 
+	- Gave general debugging assistance in integrator.py
+	
