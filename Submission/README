@@ -1,0 +1,1 @@
+To run the code, cd into the Work directory and run the integrator script. Two of the three options can be used (-t, --dt, --Nsteps) and the --Nmol option should be used for the number of molecules to generate. tqdm is a non-standard package used in the code that gives a progress bar as well as performance data.
