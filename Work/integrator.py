@@ -264,25 +264,29 @@ def a_intra(neighb_array,dist_array,data,x):
                 if (neighb_array[j,k]==2) or (neighb_array[j,k]==3) or (neighb_array[j,k]==0):
                     continue
                 elif neighb_array[j,k]==1:
-                    continue
+#                    continue
                     vec = (x[12*i+j]-x[12*i+k])
                     bond = data[12*i+j][2]+data[12*i+k][2]
                     r2 = dist_array[12*i+j,12*i+k]
-                    accel[:,i*12+j,12*i+k] = functions.F_M(r2,bond)*vec/(np.linalg.norm(vec)*data[12*i+j][3])
-                    accel[:,12*i+k,12*i+j] = -accel[:,12*i+j,12*i+k]
+                    accel[:,i*12+j,12*i+k] = functions.F_M(r2,bond)*vec/(dist_array[12*i+j,12*i+k]*data[12*i+j][3])
+                    accel[:,12*i+k,12*i+j] = accel[:,12*i+j,12*i+k]
                 elif neighb_array[j,k]==4:
 #                    continue
                     vec = (x[12*i+j]-x[12*i+k])
                     r2 = dist_array[12*i+j,12*i+k]
-                    accel[:,i*12+j,12*i+k] = 0.5*functions.F_LJ(r2)*vec/(np.linalg.norm(vec)*data[12*i+j][3])
+                    accel[:,i*12+j,12*i+k] = 0.5*functions.F_LJ(r2)*vec/(dist_array[12*i+j,12*i+k]*data[12*i+j][3])
                     accel[:,12*i+k,12*i+j] = -accel[:,12*i+j,12*i+k]
-                else:
+                elif neighb_array[j,k]==5:
 #                    continue
                     vec = (x[12*i+j]-x[12*i+k])
                     r2 = dist_array[12*i+j,12*i+k]
-                    accel[:,12*i+j,12*i+k] = functions.F_LJ(r2)*vec/(np.linalg.norm(vec)*data[12*i+j][3])
+                    accel[:,12*i+j,12*i+k] = functions.F_LJ(r2)*vec/(dist_array[12*i+j,12*i+k]*data[12*i+j][3])
                     accel[:,12*i+k,12*i+j] = -accel[:,12*i+j,12*i+k]
-    return np.transpose(np.sum(accel,axis=2)),accel
+                else:
+                    raise AttributeError('argh!!!!!')
+    accs1 = np.transpose(np.sum(accel,axis=2))
+    accs2 = functions.constraints(x,data)
+    return accs1,accel
 
 def neighb_array():
     box = np.zeros((12,12))
@@ -346,24 +350,24 @@ def dynamics(data, x0, v0, dt, t_max, filename="trajectory.xyz"):
     a_tot = np.zeros((N,3,nsteps+1))
 
     # Array of all initial distances 
-    r_dist = np.zeros((N, N))
-    r_dist = dist.cdist(r[0],r[0])
+    r_dist = np.zeros((N, N,nsteps+1))
+    r_dist[:,:,0] = dist.cdist(r[0],r[0])
     vhalf = np.zeros((len(x0), 3))
     neighbs = neighb_array()
 
     # Initial force calculations
-    a_tra[:,:,0],acc_tra[:,:,:,0] = a_intra(neighbs,r_dist,data,r[0])
-    a_ter[:,:,0],acc_ter[:,:,:,0] = a_inter(r_dist,data,r[0])
+    a_tra[:,:,0],acc_tra[:,:,:,0] = a_intra(neighbs,r_dist[:,:,0],data,r[0])
+    a_ter[:,:,0],acc_ter[:,:,:,0] = a_inter(r_dist[:,:,0],data,r[0])
     a_tot[:,:,0] = a_ter[:,:,0] + a_tra[:,:,0]
 #============= Velocity Verlet ===============================================
     for i in tqdm.tqdm(range(nsteps)):
         vhalf = v[i]+0.5*dt*a_tot[:,:,i]
         r[i+1] = r[i]+vhalf*dt
-        r_dist = dist.cdist(r[i+1],r[i+1])
-        a_tra[:,:,i+1],acc_tra[:,:,:,i+1] = a_intra(neighbs,r_dist,data,r[i+1])
-        a_ter[:,:,i+1],acc_ter[:,:,:,i+1] = a_inter(r_dist,data,r[i+1])
+        r_dist[:,:,i+1] = dist.cdist(r[i+1],r[i+1])
+        a_tra[:,:,i+1],acc_tra[:,:,:,i+1] = a_intra(neighbs,r_dist[:,:,i+1],data,r[i+1])
+        a_ter[:,:,i+1],acc_ter[:,:,:,i+1] = a_inter(r_dist[:,:,i+1],data,r[i+1])
         a_tot[:,:,i+1] = a_ter[:,:,i+1] + a_tra[:,:,i+1]
-        v[i+1] = v[i]+vhalf+0.5*dt*a_tot[:,:,i+1]
+        v[i+1] = vhalf+0.5*dt*a_tot[:,:,i+1]
         t[i+1] = dt*(i+1)
 
     #============ Write to .xyz file ==========================================
@@ -374,7 +378,7 @@ def dynamics(data, x0, v0, dt, t_max, filename="trajectory.xyz"):
         with open('velocities.xyz', 'w') as xyzfile:
             for i in range(0, nsteps):
                 IO.write_xyz_frame(xyzfile, atoms, v[i], i, "simulation")     # Writes all (v_x, v_y, v_z) data to file
-    return t, r, v, a_ter, a_tra,a_tot
+    return t, r, v, acc_tra, r_dist
 
 
 #=============================================================================================================
@@ -421,7 +425,7 @@ if __name__ == "__main__":
     os.system('python positions.py --Nmolecules {0}'.format(int(args.Nmol)))
     data = import_data()
     x_0 = initialize_positions(data)
-    v_0 = initial_velocities(data, temp_0[1])
+    v_0 = initial_velocities(data, 30000000000)
 
 #------------------------------------------------------------
 #--------------------- Propane God --------------------------
@@ -442,8 +446,8 @@ if __name__ == "__main__":
     print("You've been visited by the propane god, I tell you hwat. Don't 'alt-tab' out of here or Hank Hill will bring the pro pain.")
     print("Generating data files bfor", len(data), "atoms in simulation number", sim_n)
     start = time.time()                                             # Initial time stamp
-    atoms = [data[i][2] for i in range(len(data))]
-    t,r,v,a_ter,a_tra,a_tot = dynamics(data, x_0, v_0, dt, t, filename="trajectory.xyz")
+    atoms = [data[i][2]+str(data[i][1]) for i in range(len(data))]
+    t,r,v,acc_tra,r_dist = dynamics(data, x_0, v_0, dt, t, filename="trajectory.xyz")
     end = time.time()                       # Final time stamp
     total_time = end - start                # Calculates difference of time stamps
     timeperatom = total_time/Natom          # Calculates run time of integrator per atom

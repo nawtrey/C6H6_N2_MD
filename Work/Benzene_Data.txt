@@ -19,3 +19,9 @@ H-C = 472.3736 kJ/mol
 ---- Force Constant -------
 C-C = 392459.2 kJ/mol*nm^2
 H-C = ?
+
+
+
+## some data I calculated
+
+

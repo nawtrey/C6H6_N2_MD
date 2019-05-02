@@ -11,7 +11,7 @@
 import numpy as np
 
 kB = 1.3806488e-23     # J/K; Bolzmann's constant
-eps = 1.654e-26/kB  # Kelvin
+eps = 1.654e-30/kB  # Kelvin
 sigma = 0.341           # nm
 
 #========================================================
@@ -202,16 +202,16 @@ def V_M(r,bond):
     -------
     Potential Energy : float
     """
-    params = {'CC':{'r_e': 0.139, 'D_e': 500.0000,'k_e': 392495.2},
-              'CH':{'r_e': 0.109, 'D_e': 472.3736,'k_e': 392495.2},
-              'HC':{'r_e': 0.109, 'D_e': 472.3736,'k_e': 392495.2}}
+    params = {'CC':{'r_e': 0.139, 'D_e': 5000.0000,'k_e': 2*3924952},
+              'CH':{'r_e': 0.109, 'D_e': 1472.3736,'k_e': 3924952},
+              'HC':{'r_e': 0.109, 'D_e': 1472.3736,'k_e': 3924952}}
     values = params[bond]
     k_e = values['k_e']
     D_e = values['D_e']
     r_e = values['r_e']
     r2 = r - r_e
     beta = np.sqrt(k_e/(2*D_e))
-    return D_e*(1-np.exp(-beta*r2))**2
+    return D_e*(1-np.exp(-beta*r2))**2 
 
 
 def F_M(r,bond):
@@ -231,16 +231,16 @@ def F_M(r,bond):
     -------
     Potential Energy : float
     """
-    params = {'CC':{'r_e': 0.139, 'D_e': 500.0000,'k_e': 3.9249502e6},
-              'CH':{'r_e': 0.109, 'D_e': 472.3736,'k_e': 3.9249502e6},
-              'HC':{'r_e': 0.109, 'D_e': 472.3736,'k_e': 3.9249502e6}}
+    params = {'CC':{'r_e': 0.139, 'D_e': 922,'k_e': 1.49017e11},
+              'CH':{'r_e': 0.109, 'D_e': 110,'k_e': 9.685e10},
+              'HC':{'r_e': 0.109, 'D_e': 110,'k_e': 9.685e10}}
     values = params[bond]
     k_e = values['k_e']
     D_e = values['D_e']
     r_e = values['r_e']
     r2 = r - r_e
     beta = np.sqrt(k_e/(2*D_e))
-    return 2*beta*D_e*(np.exp(-2*beta*r2) - np.exp(-beta*r2))
+    return -2*beta*D_e*(np.exp(-2*beta*r2) - np.exp(-beta*r2))
 
 #def DA(positions, i):
 #    """
@@ -286,6 +286,51 @@ def F_M(r,bond):
 #
 #    return V_DH
 
+def constraints(positions,data):
+    """
+    positions is an array of all positions
+    """
+    #bond lengths 
+    rc = 0.139
+    rh = 0.109
+    
+    #force constant
+    k = 10000000
+
+    #define a plane based on carbons 1 3 5
+    x_c = 1/3*(positions[0][0]+positions[2][0]+positions[4][0])
+    y_c = 1/3*(positions[0][1]+positions[2][1]+positions[4][1])
+    z_c = 1/3*(positions[0][2]+positions[2][2]+positions[4][2])
+
+    #center of molecule
+    center = np.array([x_c,y_c,z_c])
+
+    #normal vector
+    normal = np.cross(positions[2]-positions[0],positions[4]-positions[0])
+    normal = normal/np.linalg.norm(normal)
+
+    #vectors to all atoms from center
+    rvecs = [positions[i]-center for i in range(12)]
+
+    #vectors to equilibrium positions of hydrogens
+    eq_vecs = np.array([[0.139, 0.   , 0.   ],                              
+    [0.0695    , 0.12037753, 0.        ],               
+    [-0.0695    ,  0.12037753,  0.        ],            
+    [-1.38999999e-01,  1.70225912e-17,  0.00000000e+00],
+    [-0.0695    , -0.12037753,  0.        ],            
+    [ 0.0695    , -0.12037753,  0.        ],            
+    [0.248, 0.   , 0.   ],                              
+    [0.124    , 0.2147743, 0.       ],                  
+    [-0.124    ,  0.2147743,  0.       ],               
+    [-2.47999996e-01,  3.03712398e-17,  0.00000000e+00],
+    [-0.124    , -0.2147743,  0.       ],               
+    [ 0.124    , -0.2147743,  0.       ]])               
+
+    forces = np.zeros((12,3))
+    forces = [[(eq_vecs[i][0]-rvecs[i][0])/data[i][3],(eq_vecs[i][1]-rvecs[i][1])/data[i][3],(eq_vecs[i][2]-rvecs[i][2])/data[i][3]] for i in range(len(rvecs))]
+    forces = np.multiply(forces,k)
+    return forces
+    
 def cutoff_r(pos_array,cutoff):
     for i in range(len(pos_array)):
         for j in range(len(pos_array[0])):
