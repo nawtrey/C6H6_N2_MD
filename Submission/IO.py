@@ -137,7 +137,7 @@ def write_xyz_frame(xyz, atoms, coordinates, frame, title="simulation"):
     xyz.write("frame %d  %s\n" % (frame, title))
     for i in range(len(atoms)):
         x, y, z = coordinates[i]
-        xyz.write("%8s  %10.5f %10.5f %10.5f\n" % (atoms[i], x, y, z))
+        xyz.write("%8s  %14.4e %14.4e %14.4e\n" % (atoms[i], x, y, z))
 
 
 def write_single(*args, **kwargs):

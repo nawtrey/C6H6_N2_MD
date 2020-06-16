@@ -13,10 +13,10 @@ import numpy as np
 #=== Initial positions of all carbon and hydrogen atoms ======
 #=============================================================
 
-a_n = 6 																# Numberdd of atoms of each type
-l = 0.139	 															# nm; C-C bond lengths in benzene
-s = 0.109 																# nm; H-C bond length
-basis = 4*(l+s)*np.array([[1,0,0],[0,1,0],[0,0,1]])								# basis vectors for placing molecule centers
+a_n = 6 																# Number of atoms of each type
+l = 1.39	 															# nm; C-C bond lengths in benzene
+s = 1.09 																# nm; H-C bond length
+basis = (l+s)*np.array([[1,0,0],[0,1,0],[0,0,1]])								# basis vectors for placing molecule centers
 
 def generate_benzene(r_vector):
     """Generates single benzene molecule at location r_vector perpendicular to the z-axis
@@ -72,7 +72,7 @@ if __name__ == "__main__":												# do this stuff when script is executed
     
     names = list(a_n * ["C"]) + list(a_n * ["H"])						# List of element names
     atomname = list(Nbenz*names)										# Creates list of all element names for all molecules
-    atomnumber = [i for i in range(1, Nbenz*12+1)]							# Generates indeces for atoms
+    atomnumber = [i for i in range(1, Nbenz*12+1)]						# Generates indices for atoms
     mass_list = list(a_n * [12.0107]) + list(a_n * [1.00794]) 			# List of masses for one molecule
     atommass = list(Nbenz*mass_list)									# List of mass for all molecules
     
