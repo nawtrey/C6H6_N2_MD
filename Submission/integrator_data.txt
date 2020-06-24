@@ -1,5 +1,0 @@
-Simulation number: 2
-Total atoms in system: 12
-Integrator runtime: 1.435534954071045
-Average integrator runtime per atom: 0.11962791283925374
-Average integrator runtime per time step: [       inf 1.43553495 0.71776748 ... 0.00143841 0.00143697 0.00143553]
